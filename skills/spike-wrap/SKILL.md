@@ -34,6 +34,12 @@ docs, because LLMs now produce content faster than humans can read it:
 Keep these distinct: the HTML is **distilled from** the Markdown, not the same content in
 two formats.
 
+**Language:** these instructions are in English for convenience — not a cue to write in
+English. Produce everything that's prose in the user's working language: the design doc's
+body, the HTML summary, the index entries (see steps 4–5 for the template specifics).
+Frontmatter field names and the `status` value (`validated` / `implemented` /
+`abandoned`, which doubles as a CSS class and an index key) stay as-is.
+
 ## 1. Find the spike
 
 Locate `.spike/<topic>/`. If the user named a topic, use it. If there's exactly one, use
@@ -129,7 +135,10 @@ no build step) — copy it, then fill in the `{{PLACEHOLDER}}` markers:
 
 It already links back to the agent doc. Keep the whole thing to one skimmable page — no
 implementation minutiae, no code dumps, no blow-by-blow log; all of that stays in the
-agent doc.
+agent doc. `assets/summary.html` ships in English as the base — if the user's working
+language isn't English, translate the section headings, the badge text, and the footer,
+and set `<html lang>` accordingly (leave the CSS class names and `{{PLACEHOLDER}}`
+markers alone).
 
 ## 5. Update the index — `docs/designs/README.md`
 
@@ -148,7 +157,8 @@ are the source of truth; the human summaries are the short version.
 
 Add or update this spike's row. Then refresh `docs/designs/humans/index.html` (start from
 `assets/index.html` in this skill if it doesn't exist yet) so there's a browsable human
-index linking to each summary page.
+index linking to each summary page — localize its headings and labels and `<html lang>`
+the same way as the summary page.
 
 ## 6. Clean up
 

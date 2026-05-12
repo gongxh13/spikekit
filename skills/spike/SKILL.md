@@ -30,6 +30,10 @@ the approach, keeping a clean running record so it can be consolidated later. Yo
 **not** implement the feature here, and you do **not** write the final docs here — that's
 `/spike-wrap`.
 
+**Language:** these instructions are written in English for convenience — that's *not* a
+cue to reply in English. Work in whatever language the user writes to you in: ask your
+questions, talk things through, and keep `NOTES.md` in that language.
+
 ## 1. Set up the scratch space
 
 Pick a short kebab-case `<topic>` slug (e.g. `stripe-payout-integration`, `pdf-export`,
@@ -85,32 +89,52 @@ just ask. Cover:
 **Technical context — orient yourself first, then confirm.** Before asking, take a
 *quick* look around — related code already in the repo, the SDKs/clients in use, a
 README, whatever tells you how the pieces fit. Don't disappear into a deep dive; this
-pass exists so you can ask sharper, more specific questions. Then come back with what you
-found *and* the gaps you couldn't fill:
-- "Looks like we'd hit Stripe's Transfers API through the existing `stripe_client.py` —
-  right? I don't have their current docs, can you paste a link or the relevant page?"
-- example request & response payloads, where credentials live, the behaviour of the
-  external system you can't see, anything ambiguous.
+pass exists so you can ask sharper questions and so you actually have something to teach
+the user (next point). Note the gaps you couldn't fill — undocumented API behaviour,
+where credentials live, example payloads, anything ambiguous about a system you can't see
+— those become questions.
 
-**Running theme: don't make the user dictate from scratch.** Whenever you put a question
+**Catch the user up before you ask them anything — and confirm it landed with a real
+question, not a rhetorical one.** Your orientation pass — and later, your experiments —
+leave *you* knowing things the user doesn't: how some API actually behaves, a technique
+that fits, a constraint you hit, two or three candidate approaches and their trade-offs.
+A spike only works if the human and the LLM share one picture, so never ask a question
+that quietly presupposes context only you have — "webhook or polling?" lands on them as
+"ratify a choice you can't evaluate." So:
+
+1. Explain what you found, in plain language, at the level they need to actually weigh in
+   — short, concrete, no jargon dump, walk through it with them.
+2. Then ask them — with the AskUserQuestion tool — whether it's clear. Options along the
+   lines of "Got it, clear enough" / "Not quite — explain it again"; the Other slot lets
+   them point at the specific bit that's fuzzy.
+3. If it's not clear, come at it a different way — a smaller example, an analogy, drop a
+   level of abstraction — and ask again. Loop until they pick "clear." Don't move on, and
+   don't ask the *next* (decision) question, until they're genuinely up to speed.
+
+Teaching, not just reporting — and whether it landed is theirs to tell you, not yours to
+assume.
+
+**Then propose, don't interrogate.** Once they're up to speed, whenever you put a question
 to them — intent, which approach to try, a design call — lead with your best
-recommendation and the one-line reason for it, and ask them to confirm or adjust. You
-almost always have enough context to propose *something*; a concrete proposal is faster
-to react to than a blank prompt, and it surfaces your assumptions so they can be
-corrected — and where your guess was wrong is exactly the alignment that matters. (With
-the AskUserQuestion tool, that means the recommended option goes first, marked as such.)
+recommendation and the one-line reason, and ask them to confirm or adjust. You almost
+always have enough context to propose *something*; a concrete proposal is faster to react
+to than a blank prompt, and it surfaces your assumptions so they can be corrected — where
+your guess was wrong is exactly the alignment that matters. (With the AskUserQuestion
+tool, the recommended option goes first, marked.)
 
-Don't dump every question at once — ask the few that matter most, iterate. Before moving
-on to experiments, play your understanding back ("here's what I think we're doing and
-why, and the approach I'd try first — does that track?") and let the user correct it.
-Write every conclusion into NOTES.md as you go — terse bullets are fine; the point is
-they survive into the final doc.
+Don't dump every question at once — a few that matter most, iterate. Write every
+conclusion into NOTES.md as you go (terse bullets are fine; they survive into the final
+doc). Before moving on to experiments, play the whole picture back — "here's what I found,
+here's what I think we're doing and why, here's the approach I'd try first; does that
+track?" — and let the user correct it.
 
 ## 3. Validate — run real experiments
 
 Now actually try it. Write throwaway scripts in `.spike/<topic>/` — call the API, run
 the thing, reproduce the scenario, whatever proves the approach. Show the user concrete
-results.
+results — and when an experiment teaches you something that shifts the picture, explain
+*why* it matters in plain language (same as step 2: keep them level with you, don't just
+absorb it and push on).
 
 It usually won't work first try. That's the point of doing this now rather than
 mid-implementation. When you hit a wall, debug *with* the user: surface exactly what you
