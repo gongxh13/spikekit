@@ -22,11 +22,14 @@ the upfront speculative spec. Instead:
    Implementation is a separate step: a fresh agent reads the agent doc and builds it —
    which also tests whether the doc was good enough.
 
-3. **(planned) a project-context skill** — for a new or existing project, research and
-   generate a proper `AGENTS.md` plus the standing context an agent needs at each stage
-   of the dev/test workflow (how to set up the env, how to run tests, project
-   conventions). This one is itself being built via `/spike` — see `docs/designs/` once
-   it lands.
+3. **`/spike-init`** — for a new or existing project, research the repo and then
+   *actually run* the "set up the env / run tests / lint / type-check" commands, and
+   write a clean pair of agent-context files: `AGENTS.md` (the cross-tool convention) plus
+   a repo-root `CLAUDE.md` that `@AGENTS.md`-imports it. Verified commands get a
+   `✅ verified <date>` stamp. If those files already exist it improves them in place
+   rather than overwriting. The difference from Claude Code's built-in `/init`: `/init`
+   writes the commands it *infers*; `/spike-init` runs them first and writes only the ones
+   that worked. See `docs/designs/agents/spike-init/`.
 
 ## Layout
 
@@ -34,6 +37,7 @@ the upfront speculative spec. Instead:
 skills/
   spike/          # the /spike skill
   spike-wrap/     # the /spike-wrap skill
+  spike-init/     # the /spike-init skill
 docs/designs/     # consolidated design records (created by /spike-wrap)
   README.md         # index
   agents/<topic>/   # detailed, for agents (markdown) — source of truth
@@ -48,10 +52,11 @@ These are personal skills — symlink (or copy) them into `~/.claude/skills/`:
 ```sh
 ln -s "$PWD/skills/spike"      ~/.claude/skills/spike
 ln -s "$PWD/skills/spike-wrap" ~/.claude/skills/spike-wrap
+ln -s "$PWD/skills/spike-init" ~/.claude/skills/spike-init
 ```
 
-Then `/spike` and `/spike-wrap` are available in any project.
+Then `/spike`, `/spike-wrap`, and `/spike-init` are available in any project.
 
 ## Status
 
-Early. `spike` / `spike-wrap` work; the project-context skill is next.
+Early, but usable. `/spike`, `/spike-wrap`, and `/spike-init` all work.

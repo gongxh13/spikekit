@@ -1,0 +1,58 @@
+<!doctype html>
+<!--
+  Browsable human index of design records. Lives at docs/designs/humans/index.html.
+  Add one <tr> per record, linking to <topic>/index.html. Keep in sync with
+  docs/designs/README.md (the source-of-truth index).
+-->
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设计记录</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#666; --line:#e3e3e3; --accent:#2563eb; --bg:#fff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e8e8e8; --muted:#9a9a9a; --line:#333; --accent:#6ea8fe; --bg:#161616; }
+  }
+  * { box-sizing: border-box; }
+  body { background:var(--bg); color:var(--fg); margin:0; padding:48px 20px;
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  main { max-width:860px; margin:0 auto; }
+  h1 { font-size:1.7rem; margin:0 0 .4em; }
+  p.lead { color:var(--muted); margin:0 0 2em; }
+  table { border-collapse:collapse; width:100%; font-size:.95rem; }
+  th, td { text-align:left; padding:.55em .7em; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); text-transform:uppercase; font-size:.74rem; letter-spacing:.06em; }
+  tr:hover td { background:rgba(127,127,127,.06); }
+  a { color:var(--accent); }
+  code { background:rgba(127,127,127,.16); padding:.1em .35em; border-radius:3px; font-size:.9em; }
+  .badge { display:inline-block; font-size:.68rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.05em; padding:.14em .5em; border-radius:4px; }
+  .badge.validated   { background:#dcfce7; color:#166534; }
+  .badge.implemented { background:#dbeafe; color:#1e40af; }
+  .badge.abandoned   { background:#fee2e2; color:#991b1b; }
+  @media (prefers-color-scheme: dark) {
+    .badge.validated   { background:#14532d; color:#bbf7d0; }
+    .badge.implemented { background:#1e3a8a; color:#bfdbfe; }
+    .badge.abandoned   { background:#7f1d1d; color:#fecaca; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>设计记录</h1>
+  <p class="lead">每一条都来自一次 <code>/spike</code>，由 <code>/spike-wrap</code> 沉淀。这里是简版；给 agent 的设计文档里有完整细节。</p>
+  <table>
+    <thead><tr><th>标题</th><th>状态</th><th>日期</th><th>一句话</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><a href="spike-init/index.html">spike-init — 生成/完善 AGENTS.md + 各开发阶段固定上下文</a></td>
+        <td><span class="badge validated">validated</span></td>
+        <td>2026-05-13</td>
+        <td>第三个 skill：调研项目、<strong>实跑</strong>搭环境/跑测试的命令、产出 <code>AGENTS.md</code> + <code>@AGENTS.md</code> 的 <code>CLAUDE.md</code> 一对（已有则完善不覆盖）；跟 <code>/init</code> 的区别是命令验证过</td>
+      </tr>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

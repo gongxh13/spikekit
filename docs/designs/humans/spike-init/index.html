@@ -1,0 +1,135 @@
+<!doctype html>
+<!--
+  Human-facing design summary for the spike-init skill.
+  One skimmable page: decisions + why + what was validated + risks.
+  Full detail lives in ../../agents/spike-init/design.md
+-->
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>spike-init — 设计概要</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#666; --line:#e3e3e3; --accent:#2563eb; --bg:#fff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e8e8e8; --muted:#9a9a9a; --line:#333; --accent:#6ea8fe; --bg:#161616; }
+  }
+  * { box-sizing: border-box; }
+  body { background:var(--bg); color:var(--fg); margin:0; padding:48px 20px;
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  main { max-width:720px; margin:0 auto; }
+  h1 { font-size:1.7rem; margin:0 0 .35em; line-height:1.25; }
+  h2 { font-size:.82rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
+    margin:2.3em 0 .55em; }
+  p { margin:.6em 0; }
+  .meta { color:var(--muted); font-size:.92rem; margin-bottom:1.6em; }
+  .badge { display:inline-block; font-size:.72rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.05em; padding:.18em .55em; border-radius:4px; vertical-align:middle; }
+  .badge.validated   { background:#dcfce7; color:#166534; }
+  .badge.implemented { background:#dbeafe; color:#1e40af; }
+  .badge.abandoned   { background:#fee2e2; color:#991b1b; }
+  @media (prefers-color-scheme: dark) {
+    .badge.validated   { background:#14532d; color:#bbf7d0; }
+    .badge.implemented { background:#1e3a8a; color:#bfdbfe; }
+    .badge.abandoned   { background:#7f1d1d; color:#fecaca; }
+  }
+  ul { padding-left:1.25em; margin:.5em 0; }
+  li { margin:.35em 0; }
+  a { color:var(--accent); }
+  code { background:rgba(127,127,127,.16); padding:.1em .35em; border-radius:3px; font-size:.9em; }
+  ol.howto { padding-left:1.4em; margin:.7em 0; }
+  ol.howto li { margin:.5em 0; }
+  .example { border-left:3px solid var(--accent); background:rgba(127,127,127,.07);
+    padding:.7em 1em; border-radius:0 6px 6px 0; margin:1.2em 0; }
+  .example .label { display:block; font-size:.72rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--muted); margin-bottom:.3em; }
+  .ba { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:1.2em 0; }
+  @media (max-width:560px) { .ba { grid-template-columns:1fr; } }
+  .ba > div { border:1px solid var(--line); border-radius:8px; padding:.8em 1em; font-size:.93rem; }
+  .ba .h { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--muted); margin-bottom:.4em; }
+  .ba .bad .h  { color:#b91c1c; }
+  .ba .good .h { color:#15803d; }
+  .ba pre { margin:.3em 0 0; white-space:pre-wrap; font-size:.85em;
+    background:rgba(127,127,127,.1); padding:.4em .6em; border-radius:4px; }
+  .footer { margin-top:3em; padding-top:1.1em; border-top:1px solid var(--line);
+    color:var(--muted); font-size:.9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>spike-init <span class="badge validated">validated</span></h1>
+  <div class="meta">
+    已验证 2026-05-13 · 来自一次 <code>/spike</code> ·
+    完整细节见<a href="../../agents/spike-init/design.md">给 agent 的设计文档</a>
+  </div>
+
+  <h2>这是什么</h2>
+  <p>spikekit 的第三个 skill：<code>/spike-init</code>。对一个新项目或已有项目，调研代码库、<strong>实际跑一遍</strong>「怎么搭环境 / 怎么跑测试 / lint / 类型检查」这些命令，然后产出一对规范的 agent 项目上下文文件 —— <code>AGENTS.md</code>（跨工具通用）+ 一个 <code>@AGENTS.md</code> import 它的 <code>CLAUDE.md</code>（Claude Code 用）。已有这些文件就<strong>完善而非覆盖</strong>。要解的痛点：agent 进项目最先卡的「环境怎么搭、测试怎么跑」—— 而模型猜的命令经常是错的。</p>
+
+  <h2>怎么工作的</h2>
+  <p>跟 Claude Code 自带的 <code>/init</code> 的关键区别：<code>/init</code> 是「分析完写下<em>推断的</em>命令」—— 推断可能错。<code>/spike-init</code> 把要推荐的命令<strong>先跑一遍</strong>，只写跑通的，跑通的打 <code>✅ verified &lt;日期&gt;</code> 标记。下面这个真实例子（spike 里跑过的 <code>pallets/click</code>）最能说明问题：</p>
+
+  <div class="ba">
+    <div class="bad">
+      <div class="h">✗ 只「分析后写下」（会翻车）</div>
+      看到 <code>pyproject.toml</code> → 推断：
+      <pre>pip install -e .
+pytest</pre>
+      用系统 Python（3.9）跑 → <code>ERROR: Package 'click' requires a different Python: 3.9.13 not in '&gt;=3.10'</code>，pytest 直接 8 errors。写进文档的是一套<strong>错命令</strong>。
+    </div>
+    <div class="good">
+      <div class="h">✓ spike-init：先跑、再写</div>
+      看到 <code>uv.lock</code> + CI 用 <code>setup-uv</code> → 试：
+      <pre>uv sync --locked      # 自动建 .venv，挑 Python 3.12
+uv run pytest         # 1493 passed, 24 skipped</pre>
+      <strong>亲眼跑通</strong> → 才写进 <code>AGENTS.md</code>，标 <code>✅ verified 2026-05-13</code>。
+    </div>
+  </div>
+
+  <p>一次 <code>/spike-init</code> 大致是这么走的：</p>
+  <ol class="howto">
+    <li><strong>看有没有现成的</strong> —— 有 <code>AGENTS.md</code>/<code>CLAUDE.md</code>/<code>.cursorrules</code> 就进「完善」模式（里面每句话当成待验证的假设），没有就「生成」模式。</li>
+    <li><strong>调研（只读）</strong> —— 优先看 <strong>lockfile</strong> 定包管理器（<code>uv.lock</code>→uv、<code>pnpm-lock.yaml</code>→pnpm、<code>package-lock.json</code>→npm…），再看 CI 配置里维护者实际跑的命令、<code>package.json</code> scripts / <code>Makefile</code> / <code>tox</code>、<code>.devcontainer/</code>、README/CONTRIBUTING。<em>不</em>从「看到 manifest」直接猜 install 命令。</li>
+    <li><strong>验证（真的跑）</strong> —— 跑 install（<code>npm ci</code> / <code>uv sync --locked</code> / …），跑测试，力所能及也跑 lint/类型检查。失败就退而求其次试别的、并把死路记下来。需要 DB/secret 才能跑的，如实写成前置条件，不假装跑绿。<strong>默认就跑，跑前告诉你一声，但没有关掉它的开关</strong> —— 这是这个 skill 的核心。</li>
+    <li><strong>完善模式：逐条对账</strong> —— 被验证驳倒的就改（附原因）；确认的留着；验不了但不矛盾的（"release 流程在 wiki"）原样保留；引用了不存在的东西（一个根本没有的 <code>scripts/build.sh</code>）不静默删、问你。保留原文件结构，少改动让 diff 好审。</li>
+    <li><strong>只问空白</strong> —— 该有的基本都有了，只问验不了的、哪儿都没写的约定、和矛盾点，每项预填最佳猜测。</li>
+    <li><strong>写这一对文件 + 给你看了再落盘</strong> —— <code>AGENTS.md</code>（分节、紧凑、<code>✅ verified</code> 标记、顶部加条记录「何时由谁验证」的 HTML 注释）+ 仓库根的 <code>CLAUDE.md</code>（第一行 <code>@AGENTS.md</code>；已有就把 import 折进去不覆盖）。生成模式给预览，完善模式给 diff。</li>
+  </ol>
+  <p>结果：一个全新的 agent 读完 <code>CLAUDE.md</code>/<code>AGENTS.md</code>，第一次就能把环境搭起来、把测试跑起来，不用瞎试。</p>
+
+  <h2>决策 &amp; 为什么</h2>
+  <ul>
+    <li><strong>产物是一对：<code>AGENTS.md</code> + <code>@AGENTS.md</code> 的 <code>CLAUDE.md</code></strong> —— 因为 Claude Code 不直接读 <code>AGENTS.md</code>，只读 <code>CLAUDE.md</code>；而 <code>AGENTS.md</code> 是 Cursor/Codex/Aider 等都认的跨工具约定。只生成 <code>AGENTS.md</code> 的话 Claude Code 自己反而看不到。</li>
+    <li><strong>跟 <code>/init</code> 的本质差异 = 命令实跑验证过</strong> —— 否则就是重复 <code>/init</code>。验证过的打 <code>✅ verified</code>，让下游 agent 和 reviewer 一眼知道可信。</li>
+    <li><strong>写进项目级、提交进版本库、团队共享的文件</strong>（仓库根的 <code>AGENTS.md</code>/<code>CLAUDE.md</code>），不是用户机器上的 <code>~/.claude/</code> —— 「各开发阶段的固定上下文」是项目级的东西。</li>
+    <li><strong>完善模式不覆盖</strong> —— 验不了的人类知识（release 流程、业务规则、"问某人"）有价值，保留；只对「被事实驳倒」和「引用不存在的东西」动手，后者还先问。</li>
+    <li><strong>verify 默认就跑、不问、无逃生口</strong> —— 这是 skill 的核心，不能默认关掉；跑前告诉用户一声即可。</li>
+    <li><strong>skill 名 <code>/spike-init</code></strong> —— 跟 spikekit 家族 <code>spike</code>/<code>spike-wrap</code> 一致，也呼应 Claude Code 的 <code>/init</code>；verify 步骤实跑命令，算是「用真实实验确认事实」的 spike 精神。</li>
+    <li><strong>v1 只做单仓库</strong> —— monorepo（per-package <code>AGENTS.md</code>、就近优先级）、生成 <code>.claude/rules/</code> 或 <code>settings.json</code>/hooks、自动保鲜 —— 都推迟。</li>
+  </ul>
+
+  <h2>验证了什么</h2>
+  <ul>
+    <li><strong><code>tj/commander.js</code>（Node/jest）</strong>：从 <code>package-lock.json</code> → npm、<code>engines.node&gt;=20</code>、CI 配置定出命令；实跑 <code>npm ci</code>（13s）→ <code>npm test</code> → <strong>1367 passed</strong>。「搭环境=<code>npm ci</code>、跑测试=<code>npm test</code>、全检=<code>npm run check</code>、自动修=<code>npm run fix</code>」全部实跑确认。</li>
+    <li><strong><code>pallets/click</code>（Python/uv+tox）</strong>：naive 路子（<code>pip install -e .</code> + <code>pytest</code>）用系统 Python 3.9 → 翻车（要 ≥3.10）—— 完美演示痛点。对的路子：<code>uv.lock</code> → uv；实跑 <code>uv sync --locked</code>（21s，自动挑 Python 3.12）→ <code>uv run pytest</code> → <strong>1493 passed / 24 skipped</strong>。</li>
+    <li><strong>「完善不覆盖」</strong>：往 commander 塞一份故意写错的 <code>AGENTS.md</code>（"Node 14+"、"yarn"、引用不存在的 <code>scripts/build.sh</code>、一句不可验证的 "release 在 wiki"），走对账逻辑 → 矛盾的改掉并附原因、缺的补全、引用不存在的提出来问、不可验证不矛盾的原样保留、保留原结构。逻辑走通了。</li>
+    <li>产出形态、流程的完整提案都写好了（见设计文档的 <code>assets/</code> 里的样例文件）。结论：可以实现（写 <code>skills/spike-init/SKILL.md</code>）。</li>
+  </ul>
+
+  <h2>遗留问题 &amp; 风险</h2>
+  <ul>
+    <li><strong>monorepo / workspaces</strong> —— per-package <code>AGENTS.md</code>、就近优先级、verify 要不要逐包跑 —— 推迟到 v1 之后。</li>
+    <li><strong>测试需要外部依赖的项目</strong>（DB/Redis/secret）—— skill 必须能识别「拿不到干净的 run」并把前置条件写成已知要求，而不是装作跑绿了。SKILL.md 里要说清，否则模型会倾向于假装。</li>
+    <li><strong>verify 改动工作树</strong>（<code>node_modules/</code>、<code>.venv/</code>、可能的 lockfile 漂移）—— 如果这些没在 <code>.gitignore</code> 里，应警告用户。</li>
+    <li><strong>保鲜</strong> —— provenance 注释 + <code>✅ verified &lt;日期&gt;</code> 只是起点，re-run 是手动的；「检测 <code>AGENTS.md</code> 过时」的 hook 是可能的后续，但 hooks 这轮不做。</li>
+    <li><strong>跟 <code>/init</code> 的重叠</strong> —— 把 <code>/spike-init</code> 定位成「会实跑验证的那个」，并在 description 里写明，免得搞混何时用哪个。</li>
+  </ul>
+
+  <div class="footer">
+    这是简版。实现细节、完整决策日志、产出样例和 build plan 都在
+    <a href="../../agents/spike-init/design.md"><code>docs/designs/agents/spike-init/design.md</code></a>。
+  </div>
+</main>
+</body>
+</html>
