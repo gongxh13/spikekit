@@ -1,0 +1,139 @@
+---
+name: spike
+description: >-
+  Run an exploratory spike to de-risk and validate an approach BEFORE committing to
+  implementation — align context with the user through real dialogue, gather the inputs
+  you're missing (API docs, specs, example payloads, the system being integrated), then
+  run actual throwaway experiments in a `.spike/<topic>/` scratch directory and iterate with
+  the user until the approach is proven (or proven not to work). Use this whenever the
+  user wants to try something out, prototype, prove a concept, "check if this API works",
+  "see if this integration is feasible", figure out how to do something before building
+  it, or otherwise de-risk a new feature or demo — even if they don't say the word
+  "spike". When the spike converges, hand off to `/spike-wrap` to consolidate it into a
+  design doc. Re-invoke `/spike` to resume an in-progress spike.
+---
+
+# Spike: validate before you build
+
+## Why this exists
+
+The usual "write a design doc, then implement, then test" order puts the document first
+and makes it speculative — written before anyone knows whether the approach actually
+works. This flips it: **align → validate → (later) document → implement**. You and the
+user have a real conversation to get on the same page; you run real experiments to find
+out what's true; and the document gets squeezed out of that process afterward (by
+`/spike-wrap`) with empirical backing. A spike is not "skipping design" — it's doing
+design *empirically and collaboratively* instead of on paper.
+
+Your job in this skill: get genuinely aligned with the user, then prove (or disprove)
+the approach, keeping a clean running record so it can be consolidated later. You do
+**not** implement the feature here, and you do **not** write the final docs here — that's
+`/spike-wrap`.
+
+## 1. Set up the scratch space
+
+Pick a short kebab-case `<topic>` slug (e.g. `stripe-payout-integration`, `pdf-export`,
+`websocket-reconnect`). Create `.spike/<topic>/` in the project root.
+
+Create `.spike/<topic>/NOTES.md` — the running record, and the thing that lets a future
+session resume:
+
+```markdown
+# Spike: <title>
+
+## Goal
+What we're validating, and what "it works" concretely looks like (success criteria).
+The broader goal this feeds into.
+
+## Alignment
+- (bulleted conclusions from talking with the user — requirements, constraints,
+  decisions, things the user clarified that aren't obvious from the code; note who
+  decided what)
+
+## Log
+- <date> tried X → result → next step
+- ...
+
+## Current state
+Where we are right now / what's next.
+```
+
+If this is a git repo and `.spike/` isn't already ignored, add `.spike/` to `.gitignore`
+and mention it — the scratch dir is throwaway and gets deleted at wrap-up.
+
+**If `.spike/<topic>/NOTES.md` already exists, you're resuming**: read it (and skim the
+artifacts) to restore context, tell the user where things stand, and continue from
+"Current state". If there are several topics under `.spike/`, list them and ask which.
+
+## 2. Align context with the user — do this before touching code
+
+This is the most important step and the one that's easy to skip. The whole point of a
+spike is getting the human and the LLM onto the same page, so this conversation isn't
+optional. There are two kinds of context and they're handled differently:
+
+**Intent — only the user has it; ask, but propose where you can.** Where you can already
+infer a likely answer from the project and what the user has said, put it forward as a
+proposal to confirm, not an open question — "I'm taking success to mean the webhook fires
+within ~5s and we can verify its signature; anything more?" beats "what does success look
+like?". Where there's genuinely nothing to infer (the broader goal, hidden constraints),
+just ask. Cover:
+- What are we validating, and what does "it works" concretely look like? Real success
+  criteria, not "see if it works".
+- What's the bigger picture this feeds into? What's in scope, what's out?
+- Any hard constraints, prior attempts, or preferences worth knowing?
+
+**Technical context — orient yourself first, then confirm.** Before asking, take a
+*quick* look around — related code already in the repo, the SDKs/clients in use, a
+README, whatever tells you how the pieces fit. Don't disappear into a deep dive; this
+pass exists so you can ask sharper, more specific questions. Then come back with what you
+found *and* the gaps you couldn't fill:
+- "Looks like we'd hit Stripe's Transfers API through the existing `stripe_client.py` —
+  right? I don't have their current docs, can you paste a link or the relevant page?"
+- example request & response payloads, where credentials live, the behaviour of the
+  external system you can't see, anything ambiguous.
+
+**Running theme: don't make the user dictate from scratch.** Whenever you put a question
+to them — intent, which approach to try, a design call — lead with your best
+recommendation and the one-line reason for it, and ask them to confirm or adjust. You
+almost always have enough context to propose *something*; a concrete proposal is faster
+to react to than a blank prompt, and it surfaces your assumptions so they can be
+corrected — and where your guess was wrong is exactly the alignment that matters. (With
+the AskUserQuestion tool, that means the recommended option goes first, marked as such.)
+
+Don't dump every question at once — ask the few that matter most, iterate. Before moving
+on to experiments, play your understanding back ("here's what I think we're doing and
+why, and the approach I'd try first — does that track?") and let the user correct it.
+Write every conclusion into NOTES.md as you go — terse bullets are fine; the point is
+they survive into the final doc.
+
+## 3. Validate — run real experiments
+
+Now actually try it. Write throwaway scripts in `.spike/<topic>/` — call the API, run
+the thing, reproduce the scenario, whatever proves the approach. Show the user concrete
+results.
+
+It usually won't work first try. That's the point of doing this now rather than
+mid-implementation. When you hit a wall, debug *with* the user: surface exactly what you
+found, say what you think is going on, ask for the missing piece, adjust. Each dead end
+and each "oh, turns out you have to X" is valuable — log it in NOTES.md. That decision
+trail is the most useful part of the doc you'll write later.
+
+Keep all artifacts in `.spike/<topic>/` and name them so the trail is legible —
+`01-call-api.py`, `02-add-auth.py`, `example-payload.json`, `run-output-2026-05-12.txt`.
+A pile of temp files in here is expected and fine; that's what the directory is for. Do
+**not** scatter experiments into the real source tree.
+
+## 4. Converge — hand off to /spike-wrap
+
+When the user confirms the approach works — or that it definitively doesn't (a documented
+"this doesn't work because Y" is worth keeping) — update NOTES.md's "Current state", then
+tell the user:
+
+> Looks like we've landed it. Run `/spike-wrap <topic>` and I'll consolidate this into a
+> design doc — a detailed one for agents plus a short HTML summary for you — and clean up
+> the scratch files.
+
+Don't do the consolidation here — that's `/spike-wrap`'s job, and keeping it a separate
+explicit step means *the user* decides "yes, this is the final approach." Don't start
+implementing the feature either; implementation is downstream of the design doc, and is
+deliberately done by a fresh agent reading it.

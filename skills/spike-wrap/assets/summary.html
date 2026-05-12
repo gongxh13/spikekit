@@ -1,0 +1,115 @@
+<!doctype html>
+<!--
+  Human-facing design summary. Copy this file to docs/designs/humans/<topic>/index.html
+  and replace every {{PLACEHOLDER}}. Keep it to one skimmable page: decisions + why +
+  what was validated + risks. No implementation details, no code, no blow-by-blow log —
+  that all lives in the agent doc this links to.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}} — design summary</title>
+<style>
+  :root { --fg:#1a1a1a; --muted:#666; --line:#e3e3e3; --accent:#2563eb; --bg:#fff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e8e8e8; --muted:#9a9a9a; --line:#333; --accent:#6ea8fe; --bg:#161616; }
+  }
+  * { box-sizing: border-box; }
+  body { background:var(--bg); color:var(--fg); margin:0; padding:48px 20px;
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  main { max-width:720px; margin:0 auto; }
+  h1 { font-size:1.7rem; margin:0 0 .35em; line-height:1.25; }
+  h2 { font-size:.82rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
+    margin:2.3em 0 .55em; }
+  p { margin:.6em 0; }
+  .meta { color:var(--muted); font-size:.92rem; margin-bottom:1.6em; }
+  .badge { display:inline-block; font-size:.72rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.05em; padding:.18em .55em; border-radius:4px; vertical-align:middle; }
+  .badge.validated   { background:#dcfce7; color:#166534; }
+  .badge.implemented { background:#dbeafe; color:#1e40af; }
+  .badge.abandoned   { background:#fee2e2; color:#991b1b; }
+  @media (prefers-color-scheme: dark) {
+    .badge.validated   { background:#14532d; color:#bbf7d0; }
+    .badge.implemented { background:#1e3a8a; color:#bfdbfe; }
+    .badge.abandoned   { background:#7f1d1d; color:#fecaca; }
+  }
+  ul { padding-left:1.25em; margin:.5em 0; }
+  li { margin:.35em 0; }
+  a { color:var(--accent); }
+  code { background:rgba(127,127,127,.16); padding:.1em .35em; border-radius:3px; font-size:.9em; }
+  /* "How it works" building blocks */
+  ol.howto { padding-left:1.4em; margin:.7em 0; }
+  ol.howto li { margin:.5em 0; }
+  figure.diagram { margin:1.5em 0; text-align:center; overflow-x:auto; }
+  figure.diagram svg, figure.diagram img { max-width:100%; height:auto; }
+  figure.diagram figcaption { color:var(--muted); font-size:.85rem; margin-top:.5em; }
+  .example { border-left:3px solid var(--accent); background:rgba(127,127,127,.07);
+    padding:.7em 1em; border-radius:0 6px 6px 0; margin:1.2em 0; }
+  .example .label { display:block; font-size:.72rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--muted); margin-bottom:.3em; }
+  .footer { margin-top:3em; padding-top:1.1em; border-top:1px solid var(--line);
+    color:var(--muted); font-size:.9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>{{TITLE}} <span class="badge {{STATUS}}">{{STATUS}}</span></h1>
+  <div class="meta">
+    {{STATUS_VERB}} {{DATE}}{{BY}} · came out of a <code>/spike</code> ·
+    full detail in the <a href="../../agents/{{TOPIC}}/design.md">agent design doc</a>
+  </div>
+
+  <h2>What this is</h2>
+  <p>{{WHAT}}</p>
+
+  <h2>How it works</h2>
+  {{HOW_IT_WORKS}}
+  <!-- Goal of this section: give the reader the right mental model of the approach in as
+       few seconds as possible. *What lands fastest depends on this particular solution*,
+       so the form is your call. The list below is a starting toolbox, not a checklist —
+       if the solution calls for something not here, do that instead:
+         · a concrete worked example told as a little story — often the single fastest:
+             <div class="example"><span class="label">Worked example</span>
+               Alice clicks Export. ~30s later she gets an email with a PDF of last
+               month's invoices. Behind it: a job row is created, a worker renders the
+               PDF, the URL is emailed.</div>
+         · a labelled box-and-arrow / sequence diagram as inline SVG (self-contained, no JS):
+             <figure class="diagram">
+               <svg viewBox="0 0 600 120" role="img" aria-label="Export flow">…</svg>
+               <figcaption>Export flow</figcaption></figure>
+         · a numbered walkthrough of the happy path:
+             <ol class="howto"><li>User clicks Export.</li><li>We create a job row and
+               return immediately.</li><li>A worker renders the PDF, then emails it.</li></ol>
+         · a before/after, a tiny table, a state diagram, a one-line analogy — whatever fits.
+       The CSS classes (ol.howto, figure.diagram, .example) are conveniences; add your own
+       <style> or markup if something else serves the solution better. A heavyweight device
+       (CSS animation, a <details> toggle, an interactive widget) has a cost — effort,
+       distraction, looking broken — so it has to earn its place by showing something a
+       static form genuinely can't, e.g. a sequence playing out over time.
+       One real boundary: this is the *intuition*, not the spec. Full APIs, edge cases,
+       the build plan — those stay in the agent doc. Keep this section skimmable. -->
+
+  <h2>Decisions &amp; why</h2>
+  <ul>
+    {{DECISIONS}}
+  </ul>
+
+  <h2>What we validated</h2>
+  <ul>
+    {{VALIDATED}}
+  </ul>
+
+  <h2>Open questions &amp; risks</h2>
+  <ul>
+    {{RISKS}}
+  </ul>
+
+  <div class="footer">
+    This is the short version. Implementation details, the full decision log, and the
+    build plan are in
+    <a href="../../agents/{{TOPIC}}/design.md"><code>docs/designs/agents/{{TOPIC}}/design.md</code></a>.
+  </div>
+</main>
+</body>
+</html>
