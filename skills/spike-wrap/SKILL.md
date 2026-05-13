@@ -8,7 +8,8 @@ description: >-
   short skimmable HTML one-pager for humans at
   `docs/designs/humans/<topic>/index.html` (decisions + why + what was validated +
   risks, no implementation minutiae). Also updates the index at `docs/designs/README.md`
-  and a browsable `docs/designs/humans/index.html`, then deletes the scratch directory.
+  and a browsable `docs/designs/humans/index.html`, then deletes the scratch directory
+  (asking the user first).
   Use this when a spike or exploration session has converged and the user wants it
   written up — "wrap up this spike", "the approach is confirmed, write it up",
   "consolidate the `.spike/` stuff into a design doc", "ok this works, document it", or
@@ -66,7 +67,7 @@ topic: <slug>
 title: <title>
 status: validated | implemented | abandoned
 created: <YYYY-MM-DD>
-spike_dir: .spike/<topic>/        # deleted after this doc; recorded for provenance
+spike_dir: .spike/<topic>/        # deleted after this doc unless you keep it; recorded for provenance
 related_code: []                   # fill in with paths once implemented
 human_summary: ../../humans/<topic>/index.html
 ---
@@ -163,9 +164,15 @@ the same way as the summary page.
 ## 6. Clean up
 
 Show the user what's in `.spike/<topic>/`, and confirm the design doc captures what
-matters and that you've moved any keepers into `assets/`. Then delete `.spike/<topic>/`.
-If `.spike/` is now empty, remove it too. The scratch dir was always meant to be
-disposable — its value is now in the doc.
+matters and that you've moved any keepers into `assets/`. Then **ask the user whether to
+delete `.spike/<topic>/`** — don't remove it on your own.
+
+- If they agree: delete `.spike/<topic>/`. If `.spike/` is now empty, remove it too.
+- If they don't: leave it in place — it stays gitignored, so nothing gets committed
+  anyway.
+
+The scratch dir was always meant to be disposable — its value is now in the doc — but
+it's the user's call when to let it go.
 
 ## 7. Hand off
 

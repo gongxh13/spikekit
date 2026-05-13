@@ -24,8 +24,9 @@ finished spike into design docs), `/spike-init` (research a repo and write its
   - `docs/designs/humans/<topic>/index.html` — a short, skimmable, self-contained HTML
     one-pager (inline CSS) for humans.
   - `docs/designs/humans/index.html` — browsable index of the human one-pagers.
-- `.spike/<topic>/` — scratch space for an in-progress spike. **Gitignored, disposable,
-  deleted by `/spike-wrap`.** Never commit it; don't reference it from committed docs.
+- `.spike/<topic>/` — scratch space for an in-progress spike. **Gitignored, disposable;
+  `/spike-wrap` offers to delete it once consolidated — the user decides.** Never commit
+  it; don't reference it from committed docs.
 - `README.md` — project overview + install instructions.
 
 ## Environment setup
