@@ -114,13 +114,35 @@ that quietly presupposes context only you have — "webhook or polling?" lands o
 Teaching, not just reporting — and whether it landed is theirs to tell you, not yours to
 assume.
 
+**For a real design call, surface the option space before you converge.** "Propose, don't
+interrogate" (below) still holds — but for *which-approach* questions (webhook vs polling,
+library X vs roll-your-own, sync vs queue, monolith handler vs state machine), jumping
+straight to one recommendation is the most common failure mode of this whole skill: you
+lock in *workable* when *better* was one thought away, and the user never gets to see the
+choice was even there. So before you recommend, force divergence — generate **2–3
+genuinely different candidates**, not three variations of one idea. A useful spread:
+
+- one **stupidly-simple** ("what's the dumbest thing that could work?") — forces you to
+  articulate why the more complex options actually pay for themselves
+- one **by-the-book** — the obvious answer someone with domain experience would reach for
+- one **from a different angle** — an off-the-shelf tool you'd otherwise write yourself,
+  an analogy from an adjacent problem you've seen solved, "what becomes possible if we
+  relax constraint X?", or inverting the problem ("instead of detecting Y, prevent Y")
+
+For each: one-line gist · the trade-off · when it'd be the right pick. *Then* recommend,
+with the reason. The user sees the option space, not just the endpoint — and the act of
+writing the other two often surfaces the real constraint that should drive the choice.
+Skip this only when the choice is genuinely binary or trivially obvious; don't manufacture
+ceremony.
+
 **Then propose, don't interrogate.** Once they're up to speed, whenever you put a question
 to them — intent, which approach to try, a design call — lead with your best
 recommendation and the one-line reason, and ask them to confirm or adjust. You almost
 always have enough context to propose *something*; a concrete proposal is faster to react
 to than a blank prompt, and it surfaces your assumptions so they can be corrected — where
 your guess was wrong is exactly the alignment that matters. (With the AskUserQuestion
-tool, the recommended option goes first, marked.)
+tool, the recommended option goes first, marked. For a design call covered by the
+divergence step above, the options list *is* the candidates.)
 
 Don't dump every question at once — a few that matter most, iterate. Write every
 conclusion into NOTES.md as you go (terse bullets are fine; they survive into the final
@@ -141,6 +163,14 @@ mid-implementation. When you hit a wall, debug *with* the user: surface exactly 
 found, say what you think is going on, ask for the missing piece, adjust. Each dead end
 and each "oh, turns out you have to X" is valuable — log it in NOTES.md. That decision
 trail is the most useful part of the doc you'll write later.
+
+**Before you tunnel into "how do I fix *this* approach," pause.** A wall is often the
+experiment telling you the *approach* is wrong, not just a bug to grind through. Re-open
+the option space for a beat: would one of the other candidates from step 2 dodge this
+entirely? Has what you just learned invalidated an assumption that made the current path
+look best? If yes, switch — cheap now, expensive after another hour of patching. If the
+current path is still right, log *why* the wall doesn't change that and keep going. The
+reflex to protect: "this is hard" is a signal to look up, not just to push harder.
 
 Keep all artifacts in `.spike/<topic>/` and name them so the trail is legible —
 `01-call-api.py`, `02-add-auth.py`, `example-payload.json`, `run-output-2026-05-12.txt`.
