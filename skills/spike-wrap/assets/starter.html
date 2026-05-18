@@ -1,0 +1,778 @@
+<!doctype html>
+<!--
+  spike-wrap starter — a primitives bag, NOT a fill-in template.
+
+  Copy this file to docs/designs/humans/<topic>/index.html, then:
+    1. Fill in the sidebar with your section anchors
+    2. Replace the example sections with content from THIS spike's material
+    3. Use the styled patterns where they fit (terminal walkthrough, PR cards,
+       before/after switch, timeline, layer diagram, experiments appendix)
+    4. Add or modify CSS as the spike calls for — this is not a layout you must
+       conform to
+
+  Required structure:
+    - Sidebar nav, not top nav (sticky on desktop, top bar on mobile)
+    - Hero with topic + punchline
+    - Decisions, validated, risks (always)
+    - Experiments appendix (always — what was actually run)
+
+  Localize: <html lang>, all headings, all badge text. Keep the CSS class names
+  ('validated', 'open', etc) as-is — they're keys, not labels.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}} — design</title>
+<style>
+  /* ============ Theme tokens (dark/light) ============ */
+  :root {
+    --bg: #0f1117;
+    --bg-elevated: #161922;
+    --bg-card: #1c2030;
+    --bg-card-hover: #232838;
+    --fg: #e7e9ee;
+    --fg-muted: #9099ad;
+    --fg-dim: #5d6478;
+    --line: #2a2f3e;
+    --line-strong: #3a4055;
+    --accent: #7c9eff;
+    --accent-strong: #a4baff;
+    --accent-soft: rgba(124, 158, 255, 0.12);
+    --green: #34d399;
+    --green-soft: rgba(52, 211, 153, 0.15);
+    --yellow: #fbbf24;
+    --yellow-soft: rgba(251, 191, 36, 0.15);
+    --red: #f87171;
+    --red-soft: rgba(248, 113, 113, 0.15);
+    --gray: #94a3b8;
+    --gray-soft: rgba(148, 163, 184, 0.15);
+    --purple: #c084fc;
+    --purple-soft: rgba(192, 132, 252, 0.15);
+    --shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fafbfc;
+      --bg-elevated: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f6f7fa;
+      --fg: #1a1d27;
+      --fg-muted: #4d5566;
+      --fg-dim: #8089a0;
+      --line: #e2e6ee;
+      --line-strong: #d0d6e0;
+      --accent: #3b65e8;
+      --accent-strong: #2547c4;
+      --accent-soft: rgba(59, 101, 232, 0.1);
+      --shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+  }
+
+  /* ============ Base ============ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, pre, .mono { font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--accent-strong); text-decoration: underline; }
+
+  /* ============ Sidebar layout ============ */
+  .layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+  }
+  aside.sidebar {
+    position: sticky; top: 0;
+    height: 100vh; overflow-y: auto;
+    background: var(--bg-elevated);
+    border-right: 1px solid var(--line);
+    padding: 32px 20px;
+  }
+  aside.sidebar .brand {
+    font-weight: 700; font-size: 14px;
+    margin-bottom: 28px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  aside.sidebar .brand .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 12px var(--green);
+  }
+  aside.sidebar nav { display: flex; flex-direction: column; gap: 2px; }
+  aside.sidebar nav a {
+    display: block; padding: 7px 12px;
+    color: var(--fg-muted); font-size: 13.5px;
+    border-radius: 6px;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  aside.sidebar nav a:hover {
+    color: var(--fg); background: var(--bg-card-hover); text-decoration: none;
+  }
+  aside.sidebar nav a.active {
+    color: var(--accent); background: var(--accent-soft);
+    border-left-color: var(--accent);
+  }
+  aside.sidebar .footer {
+    margin-top: 32px; padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--fg-dim); font-size: 11.5px; line-height: 1.5;
+  }
+  main { padding: 60px 48px 120px; max-width: 920px; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    aside.sidebar {
+      position: sticky; top: 0; height: auto;
+      border-right: none; border-bottom: 1px solid var(--line);
+      padding: 16px 20px; z-index: 10;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      background: rgba(22, 25, 34, 0.92);
+    }
+    aside.sidebar .brand { margin-bottom: 12px; }
+    aside.sidebar nav { flex-direction: row; gap: 8px; overflow-x: auto; }
+    aside.sidebar nav a { white-space: nowrap; border-left: none; border-bottom: 2px solid transparent; padding: 6px 10px; }
+    aside.sidebar nav a.active { border-left: none; border-bottom-color: var(--accent); }
+    aside.sidebar .footer { display: none; }
+    main { padding: 32px 20px 80px; }
+  }
+
+  /* ============ Section / typography ============ */
+  section { margin-bottom: 72px; scroll-margin-top: 24px; }
+  section > h2 {
+    font-size: 12.5px; color: var(--fg-muted);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    font-weight: 600; margin-bottom: 6px;
+  }
+  section > h3.title {
+    font-size: 26px; font-weight: 700;
+    letter-spacing: -0.01em; margin-bottom: 10px;
+    line-height: 1.25;
+  }
+  section > p.subtitle {
+    color: var(--fg-muted); font-size: 15.5px;
+    max-width: 680px; margin-bottom: 28px;
+  }
+  p { margin: 0.55em 0; }
+  ul { padding-left: 1.4em; margin: 0.6em 0; }
+  ul li { margin: 0.4em 0; }
+  code { background: rgba(127,127,127,.16); padding: 0.12em 0.4em; border-radius: 3px; font-size: 0.88em; }
+
+  /* ============ Hero ============ */
+  .hero { margin-bottom: 64px; padding-bottom: 32px; border-bottom: 1px solid var(--line); }
+  .hero .eyebrow {
+    color: var(--accent); font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: clamp(26px, 4vw, 38px); line-height: 1.18;
+    font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 18px;
+    background: linear-gradient(135deg, var(--fg) 0%, var(--accent-strong) 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero .lead { font-size: 17px; color: var(--fg-muted); max-width: 700px; }
+  .hero .punchline {
+    margin-top: 28px; padding: 18px 22px;
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0; font-size: 15px;
+  }
+  .hero .punchline strong { color: var(--accent-strong); }
+
+  /* ============ Badges (status pills) ============ */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .badge .ind { width: 6px; height: 6px; border-radius: 50%; }
+  .badge.validated   { background: var(--green-soft);  color: var(--green); }
+  .badge.validated   .ind { background: var(--green); }
+  .badge.implemented { background: var(--purple-soft); color: var(--purple); }
+  .badge.implemented .ind { background: var(--purple); }
+  .badge.abandoned   { background: var(--red-soft);    color: var(--red); }
+  .badge.abandoned   .ind { background: var(--red); }
+  .badge.open        { background: var(--green-soft);  color: var(--green); }
+  .badge.open        .ind { background: var(--green); animation: pulse 2s infinite; }
+  .badge.merged      { background: var(--purple-soft); color: var(--purple); }
+  .badge.merged      .ind { background: var(--purple); }
+  .badge.stalled     { background: var(--yellow-soft); color: var(--yellow); }
+  .badge.stalled     .ind { background: var(--yellow); }
+  .badge.draft       { background: var(--gray-soft);   color: var(--gray); }
+  .badge.draft       .ind { background: var(--gray); }
+  .badge.shipped     { background: var(--green-soft);  color: var(--green); }
+  .badge.shipped     .ind { background: var(--green); box-shadow: 0 0 10px var(--green); }
+  .badge.issue       { background: var(--accent-soft); color: var(--accent); }
+  .badge.issue       .ind { background: var(--accent); }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ============ Pattern: card grid (use for evidence / PRs / sources) ============ */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 18px;
+    transition: all 0.18s;
+    display: flex; flex-direction: column;
+    text-decoration: none; color: inherit;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    border-color: var(--line-strong);
+    background: var(--bg-card-hover);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+  }
+  .card .top {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 12px; margin-bottom: 6px;
+  }
+  .card .ref { font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--fg-muted); }
+  .card h4 { font-size: 15.5px; font-weight: 600; line-height: 1.35; margin: 2px 0 8px; }
+  .card .meta { color: var(--fg-dim); font-size: 12px; margin-bottom: 10px; }
+  .card .desc { color: var(--fg-muted); font-size: 13.5px; flex: 1; margin-bottom: 12px; }
+  .card .solves {
+    padding: 8px 10px; background: var(--bg-elevated); border-radius: 6px;
+    font-size: 12.5px;
+  }
+  .card .solves .label {
+    color: var(--fg-dim); text-transform: uppercase;
+    font-size: 10.5px; letter-spacing: 0.08em; margin-bottom: 3px;
+  }
+
+  /* ============ Pattern: terminal walkthrough (use for user journey / how it works) ============ */
+  .terminal {
+    background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: 12px; overflow: hidden; box-shadow: var(--shadow);
+  }
+  .terminal .head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; background: var(--bg-elevated);
+    border-bottom: 1px solid var(--line);
+  }
+  .terminal .dots { display: flex; gap: 6px; }
+  .terminal .dots span { width: 12px; height: 12px; border-radius: 50%; background: var(--line-strong); }
+  .terminal .dots span:nth-child(1) { background: #ff5f56; }
+  .terminal .dots span:nth-child(2) { background: #ffbd2e; }
+  .terminal .dots span:nth-child(3) { background: #27c93f; }
+  .terminal .head .title { color: var(--fg-muted); font-size: 13px; margin-left: 8px; }
+  .terminal .stepper { margin-left: auto; display: flex; gap: 6px; }
+  .terminal .stepper button {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--bg-card); color: var(--fg-muted);
+    border: 1px solid var(--line); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .terminal .stepper button.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .terminal .stepper button:hover:not(.active) { background: var(--bg-card-hover); color: var(--fg); }
+  .terminal .stage { display: grid; grid-template-columns: 1.2fr 1fr; min-height: 300px; }
+  @media (max-width: 760px) { .terminal .stage { grid-template-columns: 1fr; } }
+  .terminal .term {
+    background: var(--bg); padding: 18px 22px;
+    font-family: "JetBrains Mono", monospace; font-size: 13px; line-height: 1.7;
+    overflow-x: auto; border-right: 1px solid var(--line);
+  }
+  @media (max-width: 760px) { .terminal .term { border-right: none; border-bottom: 1px solid var(--line); } }
+  .terminal .term .prompt { color: var(--green); user-select: none; }
+  .terminal .term .cmd { color: var(--fg); }
+  .terminal .term .out { color: var(--fg-dim); font-size: 12.5px; }
+  .terminal .term .hl { color: var(--accent); }
+  .terminal .term .ok { color: var(--green); }
+  .terminal .explain { padding: 18px 22px; display: flex; flex-direction: column; gap: 10px; }
+  .terminal .explain h4 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .terminal .explain h4 .num {
+    background: var(--accent); color: white; width: 24px; height: 24px;
+    border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12.5px; font-weight: 700;
+  }
+  .terminal .explain p { color: var(--fg-muted); font-size: 13.5px; }
+  .terminal .explain .key {
+    margin-top: 4px; padding: 9px 12px; background: var(--accent-soft);
+    border-radius: 6px; font-size: 12.5px; border-left: 2px solid var(--accent);
+  }
+  .terminal .step { display: none; }
+  .terminal .step.active { display: contents; }
+
+  /* ============ Pattern: before/after switch (use for key insight comparison) ============ */
+  .switch-demo { background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .switch-demo .switch { display: flex; border-bottom: 1px solid var(--line); background: var(--bg-elevated); }
+  .switch-demo .switch button {
+    flex: 1; padding: 13px 18px; background: transparent; color: var(--fg-muted);
+    border: none; cursor: pointer; font-size: 13.5px; font-weight: 600;
+    border-bottom: 2px solid transparent; transition: all 0.15s;
+  }
+  .switch-demo .switch button.active { color: var(--fg); border-bottom-color: var(--accent); background: var(--bg-card); }
+  .switch-demo .switch button:hover:not(.active) { color: var(--fg); background: var(--bg-card-hover); }
+  .switch-demo .panel { display: none; padding: 24px; }
+  .switch-demo .panel.active { display: block; }
+  .switch-demo .outcome {
+    margin-top: 14px; padding: 12px 16px; border-radius: 8px; font-size: 13.5px;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .switch-demo .outcome .icon { font-size: 17px; line-height: 1; flex-shrink: 0; }
+  .switch-demo .outcome.bad { background: var(--red-soft); color: var(--red); }
+  .switch-demo .outcome.good { background: var(--green-soft); color: var(--green); }
+
+  /* ============ Pattern: layer diagram (use for stack / data flow) ============ */
+  .layers { background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px; padding: 28px; }
+  .layer {
+    display: grid; grid-template-columns: 200px 1fr auto;
+    gap: 14px; align-items: center;
+    padding: 14px 18px; margin: 8px 0;
+    background: var(--bg-elevated); border-radius: 8px;
+    border-left: 3px solid var(--accent); transition: transform 0.15s;
+  }
+  .layer:hover { transform: translateX(4px); }
+  .layer .lname { font-family: "JetBrains Mono", monospace; font-size: 13px; font-weight: 600; color: var(--accent); }
+  .layer .lcontent { color: var(--fg-muted); font-size: 13.5px; }
+  .layer .ltag {
+    font-size: 10.5px; padding: 3px 8px; border-radius: 4px;
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .layer-arrow { text-align: center; padding: 3px; color: var(--fg-dim); font-size: 16px; }
+  @media (max-width: 600px) { .layer { grid-template-columns: 1fr; gap: 6px; } .layer .ltag { justify-self: start; } }
+
+  /* ============ Pattern: timeline (use for exploration journey) ============ */
+  .timeline { position: relative; padding-left: 36px; }
+  .timeline::before { content: ''; position: absolute; left: 10px; top: 10px; bottom: 10px; width: 2px; background: var(--line); }
+  .timeline-item { position: relative; padding-bottom: 22px; }
+  .timeline-item::before {
+    content: ''; position: absolute; left: -31px; top: 5px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--bg); border: 2px solid var(--accent);
+  }
+  .timeline-item.major::before { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+  .timeline-item .time { font-family: "JetBrains Mono", monospace; font-size: 11.5px; color: var(--fg-dim); margin-bottom: 3px; }
+  .timeline-item h4 { font-size: 14.5px; font-weight: 600; margin-bottom: 4px; }
+  .timeline-item p { color: var(--fg-muted); font-size: 13.5px; }
+
+  /* ============ Pattern: collapsible history / superseded ============ */
+  details.history {
+    background: var(--bg-card); border: 1px solid var(--line);
+    border-radius: 12px; overflow: hidden;
+  }
+  details.history summary {
+    padding: 18px 22px; cursor: pointer; list-style: none;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.15s;
+  }
+  details.history summary::-webkit-details-marker { display: none; }
+  details.history summary:hover { background: var(--bg-card-hover); }
+  details.history summary h4 { font-size: 15px; font-weight: 600; }
+  details.history summary .chevron { color: var(--fg-muted); font-size: 13px; transition: transform 0.2s; }
+  details.history[open] summary .chevron { transform: rotate(180deg); }
+  details.history .content { padding: 0 22px 22px; border-top: 1px solid var(--line); padding-top: 18px; }
+
+  /* ============ Pattern: experiments appendix (one details per experiment) ============ */
+  .experiments { display: flex; flex-direction: column; gap: 12px; }
+  details.experiment {
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: 10px;
+    overflow: hidden;
+  }
+  details.experiment summary {
+    padding: 14px 18px; cursor: pointer; list-style: none;
+    display: flex; align-items: center; gap: 10px;
+    transition: background 0.15s;
+  }
+  details.experiment summary::-webkit-details-marker { display: none; }
+  details.experiment summary:hover { background: var(--bg-card-hover); }
+  details.experiment summary .label {
+    font-family: "JetBrains Mono", monospace; font-size: 11.5px;
+    color: var(--fg-dim); margin-right: 8px;
+  }
+  details.experiment summary .title { font-size: 14.5px; font-weight: 600; flex: 1; }
+  details.experiment summary .result { font-size: 11.5px; padding: 2px 7px; border-radius: 3px; }
+  details.experiment summary .result.pass { background: var(--green-soft); color: var(--green); }
+  details.experiment summary .result.fail { background: var(--red-soft); color: var(--red); }
+  details.experiment summary .chevron { color: var(--fg-muted); font-size: 12px; transition: transform 0.2s; margin-left: 4px; }
+  details.experiment[open] summary .chevron { transform: rotate(180deg); }
+  details.experiment .body {
+    padding: 0 18px 18px; border-top: 1px solid var(--line); padding-top: 14px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  details.experiment .body h5 {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--fg-muted); margin-bottom: 4px; font-weight: 600;
+  }
+  details.experiment .body pre {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+    padding: 12px 14px; font-size: 12.5px; overflow-x: auto;
+  }
+  details.experiment .body .conclusion {
+    padding: 10px 12px; background: var(--accent-soft); border-radius: 6px;
+    font-size: 13.5px; border-left: 2px solid var(--accent);
+  }
+
+  /* ============ Generic code block (for inline code samples) ============ */
+  pre.code {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 18px; font-size: 12.5px; line-height: 1.65;
+    overflow-x: auto; margin: 12px 0;
+  }
+  pre.code .k { color: var(--purple); }
+  pre.code .s { color: var(--green); }
+  pre.code .c { color: var(--fg-dim); font-style: italic; }
+  pre.code .marker { color: var(--red); font-weight: bold; }
+  pre.code .marker.ok { color: var(--green); }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!--
+    SIDEBAR — list every <section id>. Keep entries short (1–3 words).
+    Sidebar nav stays on the left on desktop; collapses to a horizontal scroll
+    bar at the top on screens narrower than 900px (the CSS handles it).
+  -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span>{{SHORT_BRAND}}</span>
+    </div>
+    <nav>
+      <a href="#overview" class="active">概览</a>
+      <a href="#how-it-works">如何工作</a>
+      <a href="#ecosystem">证据 / 生态</a>
+      <a href="#decisions">关键决策</a>
+      <a href="#validated">已验证</a>
+      <a href="#risks">风险</a>
+      <a href="#history">历史 / 演化</a>
+      <a href="#experiments">实验附录</a>
+    </nav>
+    <div class="footer">
+      Spike 完整文档:
+      <a href="../../agents/{{TOPIC}}/design.md">design.md</a>
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- ============ HERO ============ -->
+    <header class="hero" id="overview">
+      <div class="eyebrow">{{STATUS_VERB}} · {{DATE}}</div>
+      <h1>{{TITLE}}</h1>
+      <p class="lead">{{LEAD_PARAGRAPH}}</p>
+      <div class="punchline">
+        <strong>核心结论</strong>:{{PUNCHLINE}}
+      </div>
+    </header>
+
+    <!--
+      ====================================================================
+      SECTION PATTERNS — pick what fits this spike, delete what doesn't.
+      Below are commented-out reference snippets, NOT a fill-in template.
+      ====================================================================
+    -->
+
+    <!-- ============ Section: User journey / how it works (terminal walkthrough) ============
+
+    <section id="how-it-works">
+      <h2>从用户视角</h2>
+      <h3 class="title">如何使用</h3>
+      <p class="subtitle">点步骤按钮或方向键切换;左边模拟终端,右边解释每步在做什么。</p>
+
+      <div class="terminal" data-stepper>
+        <div class="head">
+          <div class="dots"><span></span><span></span><span></span></div>
+          <div class="title">~/project</div>
+          <div class="stepper">
+            <button data-step="1" class="active">1</button>
+            <button data-step="2">2</button>
+            <button data-step="3">3</button>
+          </div>
+        </div>
+        <div class="stage">
+          <div class="term">
+            <div class="step active" data-step="1">
+              <div><span class="prompt">$</span> <span class="cmd">command here</span></div>
+              <div class="out">output here</div>
+            </div>
+            <div class="step" data-step="2">…</div>
+            <div class="step" data-step="3">…</div>
+          </div>
+          <div class="explain">
+            <div class="step active" data-step="1">
+              <h4><span class="num">1</span>Step 1 title</h4>
+              <p>What's happening and why.</p>
+              <div class="key">关键: the single most important thing</div>
+            </div>
+            <div class="step" data-step="2">…</div>
+            <div class="step" data-step="3">…</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    ============ End section ============ -->
+
+    <!-- ============ Section: Evidence / ecosystem (card grid) ============
+
+    <section id="ecosystem">
+      <h2>依赖的事实 / 已有工作</h2>
+      <h3 class="title">已发布或在路上的能力</h3>
+      <p class="subtitle">每张卡片可点跳转到上游源。</p>
+      <div class="card-grid">
+        <a class="card" href="https://example.com/pr/1234" target="_blank" rel="noopener">
+          <div class="top">
+            <span class="ref">PR #1234</span>
+            <span class="badge open"><span class="ind"></span>OPEN</span>
+          </div>
+          <h4>Some PR title</h4>
+          <div class="meta">author · 166 lines</div>
+          <p class="desc">What this PR does, in 2 lines.</p>
+          <div class="solves">
+            <div class="label">解决问题</div>
+            <div>What it specifically addresses</div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    ============ End section ============ -->
+
+    <!-- ============ Section: Layer / data-flow diagram ============
+
+    <section id="layers">
+      <h2>架构</h2>
+      <h3 class="title">三层 lock 各司其职</h3>
+      <div class="layers">
+        <div class="layer">
+          <div class="lname">layer-1.json</div>
+          <div class="lcontent">What layer 1 stores · who writes it</div>
+          <div class="ltag">commit</div>
+        </div>
+        <div class="layer-arrow">↓ <span style="font-size:11px">npm install</span></div>
+        <div class="layer">
+          <div class="lname">layer-2.json</div>
+          <div class="lcontent">…</div>
+          <div class="ltag">commit</div>
+        </div>
+      </div>
+    </section>
+
+    ============ End section ============ -->
+
+    <!-- ============ Section: Before/after switch (key insight) ============
+
+    <section id="insight">
+      <h2>关键洞察</h2>
+      <h3 class="title">缺口在哪里</h3>
+      <div class="switch-demo">
+        <div class="switch">
+          <button class="active" data-tab="before">现状</button>
+          <button data-tab="after">提议方案</button>
+        </div>
+        <div class="panel active" data-tab="before">
+          <pre class="code"><span class="c"># config / state shown for "before"</span>
+key: <span class="s">"value"</span>  <span class="marker">← problem</span></pre>
+          <div class="outcome bad"><span class="icon">⚠</span><div>What goes wrong, in plain language</div></div>
+        </div>
+        <div class="panel" data-tab="after">
+          <pre class="code"><span class="c"># after our change</span>
+key: <span class="s">"value"</span>  <span class="marker ok">← fixed</span></pre>
+          <div class="outcome good"><span class="icon">✓</span><div>Why this works</div></div>
+        </div>
+      </div>
+    </section>
+
+    ============ End section ============ -->
+
+    <!-- ============ Section: Decisions (always) ============ -->
+
+    <section id="decisions">
+      <h2>方向</h2>
+      <h3 class="title">关键决策与为什么</h3>
+      <ul>
+        <li><strong>Decision 1</strong>: rationale.</li>
+        <li><strong>Decision 2</strong>: rationale.</li>
+      </ul>
+    </section>
+
+    <!-- ============ Section: Validated (always, for validated/implemented) ============ -->
+
+    <section id="validated">
+      <h2>证据</h2>
+      <h3 class="title">实际验证了什么</h3>
+      <ul>
+        <li>Fact 1, with reference to experiment in appendix.</li>
+        <li>Fact 2.</li>
+      </ul>
+    </section>
+
+    <!-- ============ Section: Risks (always) ============ -->
+
+    <section id="risks">
+      <h2>注意</h2>
+      <h3 class="title">遗留问题与风险</h3>
+      <ul>
+        <li><strong>Risk 1</strong>: what it is. <em>缓解:</em> approach.</li>
+      </ul>
+    </section>
+
+    <!-- ============ Section: History / superseded (when relevant) ============
+
+    <section id="history">
+      <h2>历史</h2>
+      <h3 class="title">早期思路(已演化)</h3>
+      <p class="subtitle">如果设计经过明显演化,把早期方案放进可展开块,方便理解为什么最终方案是对的。</p>
+      <details class="history">
+        <summary>
+          <h4>展开看早期 "xyz" 方案 →</h4>
+          <span class="chevron">▼</span>
+        </summary>
+        <div class="content">
+          <p>What was tried first, and what's different now.</p>
+          <pre class="code">…</pre>
+        </div>
+      </details>
+    </section>
+
+    ============ End section ============ -->
+
+    <!-- ============ Section: Timeline (when exploration was non-linear) ============
+
+    <section id="timeline">
+      <h2>过程</h2>
+      <h3 class="title">探索时间线</h3>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="time">14:11</div>
+          <h4>Starting point</h4>
+          <p>Initial problem statement.</p>
+        </div>
+        <div class="timeline-item major">
+          <div class="time">15:30</div>
+          <h4>Turning point</h4>
+          <p>Key insight that changed direction.</p>
+        </div>
+      </div>
+    </section>
+
+    ============ End section ============ -->
+
+    <!-- ============ Section: Experiments appendix (ALWAYS) ============ -->
+
+    <section id="experiments">
+      <h2>附录</h2>
+      <h3 class="title">做过的实验</h3>
+      <p class="subtitle">
+        每个 details 块展开,可看见 setup / 跑过的命令 / 观察到的结果 / 结论。
+        让读者(或未来的你)可以验证上面的论断不是凭空写的。
+      </p>
+      <div class="experiments">
+
+        <details class="experiment">
+          <summary>
+            <span class="label">EXP 1</span>
+            <span class="title">实验名称</span>
+            <span class="result pass">通过</span>
+            <span class="chevron">▼</span>
+          </summary>
+          <div class="body">
+            <div>
+              <h5>Setup</h5>
+              <p>What was prepared.</p>
+            </div>
+            <div>
+              <h5>Commands run</h5>
+              <pre>$ command 1
+$ command 2</pre>
+            </div>
+            <div>
+              <h5>Observed result</h5>
+              <pre>Output snippet here.</pre>
+            </div>
+            <div class="conclusion">
+              <strong>结论:</strong> 这个实验证明了什么。
+            </div>
+          </div>
+        </details>
+
+        <details class="experiment">
+          <summary>
+            <span class="label">EXP 2</span>
+            <span class="title">另一个实验</span>
+            <span class="result fail">失败</span>
+            <span class="chevron">▼</span>
+          </summary>
+          <div class="body">…</div>
+        </details>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // ===== Sidebar active-section highlighting =====
+  (function() {
+    const links = Array.from(document.querySelectorAll('aside.sidebar nav a'));
+    const sections = links.map(a => document.querySelector(a.getAttribute('href')));
+    function update() {
+      const y = window.scrollY + 120;
+      let activeIdx = 0;
+      sections.forEach((s, i) => { if (s && s.offsetTop <= y) activeIdx = i; });
+      links.forEach((a, i) => a.classList.toggle('active', i === activeIdx));
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  })();
+
+  // ===== Terminal stepper(s) =====
+  (function() {
+    document.querySelectorAll('[data-stepper], .terminal').forEach(walk => {
+      const buttons = walk.querySelectorAll('.stepper button');
+      const steps = walk.querySelectorAll('.step');
+      if (!buttons.length) return;
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const n = btn.dataset.step;
+          buttons.forEach(b => b.classList.toggle('active', b.dataset.step === n));
+          steps.forEach(s => s.classList.toggle('active', s.dataset.step === n));
+        });
+      });
+    });
+    document.addEventListener('keydown', (e) => {
+      const walk = document.querySelector('.terminal');
+      if (!walk) return;
+      if (e.key === 'ArrowRight') {
+        const active = walk.querySelector('.stepper button.active');
+        const next = active && active.nextElementSibling;
+        if (next) next.click();
+      } else if (e.key === 'ArrowLeft') {
+        const active = walk.querySelector('.stepper button.active');
+        const prev = active && active.previousElementSibling;
+        if (prev) prev.click();
+      }
+    });
+  })();
+
+  // ===== Before/after switch(es) =====
+  (function() {
+    document.querySelectorAll('.switch-demo .switch button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        const root = btn.closest('.switch-demo');
+        root.querySelectorAll('.switch button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        root.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.dataset.tab === tab));
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>
