@@ -86,13 +86,38 @@ just ask. Cover:
 - What's the bigger picture this feeds into? What's in scope, what's out?
 - Any hard constraints, prior attempts, or preferences worth knowing?
 
-**Technical context — orient yourself first, then confirm.** Before asking, take a
-*quick* look around — related code already in the repo, the SDKs/clients in use, a
-README, whatever tells you how the pieces fit. Don't disappear into a deep dive; this
-pass exists so you can ask sharper questions and so you actually have something to teach
-the user (next point). Note the gaps you couldn't fill — undocumented API behaviour,
-where credentials live, example payloads, anything ambiguous about a system you can't see
-— those become questions.
+**Technical context — orient yourself first, then confirm.** Before asking, find out
+what's already in the repo that's relevant. *How much to dig depends on whether the
+spike has to live inside existing project code.* Two cases:
+
+- **The spike has to integrate, extend, or replace something the project already has**
+  — refactoring an existing flow, building on top of an existing service, adding a
+  feature that must fit current conventions, modifying a CLI's commands, or any
+  outcome whose final form will land in the real source tree. A quick skim is **not
+  enough** here — without real understanding of what's there, you'll ask hollow
+  questions, miss conventions, and propose approaches that conflict with the codebase.
+  **Dispatch one or more `Explore` sub-agents in parallel** (`Agent` tool,
+  `subagent_type: Explore`) to map the relevant areas: file paths, prevailing
+  conventions, existing abstractions, where the spike's output will need to hook in,
+  what would break. Be specific in each prompt — "find every place that calls into the
+  payments service, summarize the current event flow, list test conventions used in
+  `tests/payments/`" beats "explore the codebase." Parallel sub-agents protect your
+  context window and produce sharper questions than a serial Read/Grep slog.
+
+- **The spike is about something the project doesn't currently touch** — trying a new
+  library, validating an external API, prototyping in a `.spike/` sandbox that doesn't
+  have to wire in anywhere yet. A quick orientation is enough: a README skim, the
+  SDKs/clients in use, the spike's immediate inputs. Don't disappear into a deep dive
+  here — the spike *is* the exploration.
+
+If you're not sure which case you're in, **ask the user with a concrete proposal**:
+"Looks like this touches the existing X — I want to send an Explore agent to map Y
+before we go further. OK?" — and confirm via the AskUserQuestion tool. Don't silently
+guess wrong.
+
+In both cases: note the gaps you couldn't fill — undocumented API behaviour, where
+credentials live, example payloads, anything ambiguous about a system you can't see —
+those become questions for the user.
 
 **Catch the user up before you ask them anything — and confirm it landed with a real
 question, not a rhetorical one.** Your orientation pass — and later, your experiments —
