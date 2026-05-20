@@ -116,7 +116,12 @@ would have to change", and drop "Implementation plan".
 
 Before the cleanup step, move anything genuinely worth keeping — a reference payload, a
 diagram, a screenshot — from the scratch dir into `docs/designs/agents/<topic>/assets/`
-rather than letting it vanish.
+rather than letting it vanish. If a load-bearing figure is *missing* — there's no
+architecture diagram, or no picture of the validated result — generate one with the
+`spike-screenshot` skill rather than leaving the doc text-only: render a small HTML/CSS
+figure and screenshot it, or capture the actual page/output. In the agent doc these are
+referenced as ordinary relative paths (`![…](assets/foo.png)`); base64 embedding is only
+needed for the self-contained human HTML (see 4.2).
 
 ## 4. Write the human HTML — `docs/designs/humans/<topic>/index.html`
 
@@ -143,7 +148,11 @@ spike calls for.
   single most important takeaway). For `validated` spikes the punchline is usually
   the design decision; for `abandoned` it's what doesn't work and why.
 - **Self-contained:** inline `<style>` + `<script>`, no external fonts or assets
-  (system font stack works fine). The reader may open this offline.
+  (system font stack works fine). The reader may open this offline. This includes
+  **images**: any screenshot or figure you add must be embedded inline as a base64
+  data URI (`<img src="data:image/png;base64,…">`), not linked as an external file —
+  otherwise the page breaks when moved or opened offline. Generate the PNG with
+  `spike-screenshot`, then base64-encode it into the `src`.
 - **Dark/light mode** via `prefers-color-scheme` (the starter does this for you —
   inherit it).
 - **`<html lang>`** matches the working language. Translate headings, labels, badges.
@@ -156,9 +165,9 @@ Not every spike needs every section. Pick from this menu:
 | Section | When to include | Form |
 |---|---|---|
 | **How it works / user journey** | Almost always (validated/implemented). When there's a concrete user flow worth showing. | Interactive terminal walkthrough (numbered steps; step buttons or arrow keys advance; left-column terminal sim, right-column explanation) — or a numbered ordered list if the flow is shorter. |
-| **Ecosystem / evidence** | When the spike's outcome rests on external sources (PRs, libs, issues, papers). Especially when "we don't build, we adopt" is the conclusion. | Card grid: each card is one external artifact, with title, URL (whole card clickable), status badge (color-coded), brief description, and "解决什么问题" (what it solves). |
-| **Conceptual diagram** | When the architecture has layers / actors / data flow that benefits from a picture more than prose. | Inline SVG, or a labelled box-and-arrow built with HTML+CSS divs (the starter has `.layer` and `.layer-arrow` examples). |
-| **Key insight / before-after** | When there's a single sharp insight that flipped the design. | Tabbed before/after switch (the starter has `.switch`+`.panel`) showing the prior state vs the new state with concrete code/output samples. |
+| **Ecosystem / evidence** | When the spike's outcome rests on external sources (PRs, libs, issues, papers). Especially when "we don't build, we adopt" is the conclusion. | Card grid: each card is one external artifact, with title, URL (whole card clickable), status badge (color-coded), brief description, and "解决什么问题" (what it solves). When a card points at something visual (a PR, a dashboard, a rendered page), capture a thumbnail of it with `spike-screenshot` (Workflow A) and embed it in the card (base64-inline, see 4.2) — evidence the reader can *see* beats a bare link. |
+| **Conceptual diagram** | When the architecture has layers / actors / data flow that benefits from a picture more than prose. | Inline SVG, or a labelled box-and-arrow built with HTML+CSS divs (the starter has `.layer` and `.layer-arrow` examples). For a polished figure that's fiddly to hand-build (a layered architecture, a directory tree, a comparison matrix), it's usually faster and cleaner to write a small standalone HTML/CSS figure and screenshot it with `spike-screenshot` (Workflow B), then embed the PNG base64-inline. |
+| **Key insight / before-after** | When there's a single sharp insight that flipped the design. | Tabbed before/after switch (the starter has `.switch`+`.panel`) showing the prior state vs the new state with concrete code/output samples. If the two states are visual (a UI, a rendered output, a diff), screenshot each with `spike-screenshot` and drop them into the two panels (base64-inline). |
 | **Decisions and why** | Always. | Bulleted list, each item stating the decision and the reason it was made. |
 | **What we validated** | Always (for `validated`/`implemented`). | Bulleted list of concrete facts proven during the spike (tied to the experiments in the appendix). |
 | **Risks & open questions** | Always. | Bulleted list. |
@@ -181,7 +190,10 @@ block that expands to show:
 
 - **Setup** — what was prepared (mock files, fixtures, branches checked out)
 - **Commands run** — actual shell commands (in `<pre>` blocks, preserving the prompts)
-- **Observed result** — what came out, the key bits
+- **Observed result** — what came out, the key bits. If the result was visual (a
+  rendered page, a chart, a UI state), capture it with `spike-screenshot` and embed
+  the image base64-inline — a screenshot of the actual output is the most trustworthy
+  evidence there is, and it's what makes the appendix verifiable rather than asserted.
 - **Conclusion** — what the experiment proves (or disproves)
 
 If the spike ran a dozen tests, you don't need a `<details>` per test — group them

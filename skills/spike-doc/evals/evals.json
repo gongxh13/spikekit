@@ -1,0 +1,58 @@
+{
+  "skill_name": "spike-doc",
+  "evals": [
+    {
+      "id": 0,
+      "name": "md-dir-tree-figure",
+      "prompt": "帮我写一篇简短的 markdown 技术文档，介绍 /Users/xuhonggong/Desktop/files/project/demo/spikekit/skills/ 这个目录里都有哪些 skill、每个大致干嘛的。在合适的地方配上一张目录结构的图。",
+      "expected_output": "A .md file with prose describing each skill, plus a rendered directory-structure figure (PNG) embedded via a relative markdown image link; the PNG file actually exists at the referenced path.",
+      "files": [],
+      "assertions": [
+        {"text": "产出了一个 .md 文档", "kind": "objective"},
+        {"text": "渲染并保存了一张目录结构图 PNG", "kind": "objective"},
+        {"text": "md 用相对路径 ![](...png) 嵌入了该图，且文件真实存在于引用路径", "kind": "objective"},
+        {"text": "正文逐个介绍了 skills/ 下的 skill（spike / spike-init / spike-wrap / spike-screenshot / spike-doc）", "kind": "objective"},
+        {"text": "图配在了合适位置、对正文有信息增量（非装饰）", "kind": "qualitative"}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "md-web-screenshot-evidence",
+      "prompt": "我要给项目 README 写一段介绍 example.com 这个站点的章节，给我配一张它首页的截图。markdown 格式。",
+      "expected_output": "A .md section introducing example.com with a real screenshot of its homepage embedded via relative markdown image link; the screenshot PNG exists.",
+      "files": [],
+      "assertions": [
+        {"text": "产出了 markdown 文档/章节", "kind": "objective"},
+        {"text": "真实截取了 example.com 首页（PNG 存在、内容是该站点而非报错页）", "kind": "objective"},
+        {"text": "md 用相对路径嵌入了该截图", "kind": "objective"},
+        {"text": "截图配有 alt 文本/说明", "kind": "qualitative"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "html-selfcontained-table-figure",
+      "prompt": "把'Markdown vs 自包含 HTML vs PDF 三种文档格式的对比'写成一个单文件 HTML 小报告，要能离线发给同事直接双击打开。里面放一张三者对比表的图。",
+      "expected_output": "A single self-contained .html file (no external assets) containing a comparison-table figure embedded as a base64 data URI image; opens offline.",
+      "files": [],
+      "assertions": [
+        {"text": "产出了单个 .html 文件", "kind": "objective"},
+        {"text": "HTML 内含 base64 data URI 图片（data:image/...;base64,）", "kind": "objective"},
+        {"text": "没有外链图片 src（不含 src=\"./ 或 src=\"http 的 img）", "kind": "objective"},
+        {"text": "对比表图内容覆盖三种格式且与正文一致", "kind": "qualitative"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "md-howto-demo-video",
+      "prompt": "写一个简短的 markdown how-to，标题叫《快速看一眼 example.com》，录一段几秒钟的页面演示视频放进去。",
+      "expected_output": "A markdown how-to with a short screen-recording of example.com produced (webm/mp4/gif) and embedded/linked; the video file exists.",
+      "files": [],
+      "assertions": [
+        {"text": "产出了 markdown how-to 文档", "kind": "objective"},
+        {"text": "真实录制了一段页面演示视频文件（webm/mp4/gif 存在且非空）", "kind": "objective"},
+        {"text": "md 中以可播放或可点击方式引用了该视频（gif 内嵌 / mp4 链接 / video 标签）", "kind": "objective"},
+        {"text": "文档说明了视频展示的内容", "kind": "qualitative"}
+      ]
+    }
+  ]
+}
