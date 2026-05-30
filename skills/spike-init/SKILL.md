@@ -95,6 +95,12 @@ the repo is large. Roughly in priority order:
 - **Repo shape:** top-level directories, where source vs. tests live, whether it's a
   monorepo (workspaces / `packages/*`). (v1 still produces a single root `AGENTS.md` —
   see step 5 — but you want to know.)
+- **UI surface? (decides whether e2e is even applicable.)** Check for a frontend /
+  browser-facing app — a React/Vue/Svelte/Next app, an `index.html` entry, a `public/`
+  served by a dev server. **If there is one**, a browser/e2e layer (Playwright/Cypress)
+  is in scope — propose it, and scaffold/verify it under step 3. **If there isn't** (a Go
+  library, a CLI, a headless API), e2e doesn't apply — don't scaffold or recommend it.
+  Make this an explicit check, not an afterthought.
 
 **Don't infer the install command straight from the manifest.** `pyproject.toml`
 existing ≠ use pip; `package.json` existing ≠ use npm. Priority is **lockfile → its
@@ -107,6 +113,25 @@ This is the step that makes `/spike-init` worth using. **It always runs — no
 `X` to verify the setup/test commands" — warn, then run. Try not to dirty tracked files
 (install artifacts like `node_modules/`, `.venv/` are usually already gitignored; if
 they're *not*, warn the user before you create them, or note it as a caveat).
+
+**Run everything non-interactively.** Some standard commands block on a prompt
+(`next lint` / ESLint init, `npm init`, framework scaffolders, `gh auth login`) and will
+hang the agent indefinitely waiting for a keypress. Anticipate it: pass the
+non-interactive flag, redirect `< /dev/null`, or — if the project's *own* documented
+command is interactive — reconfigure it into a CI-safe form (e.g. replace `next lint`
+with a committed `eslint.config.*` + `eslint .`) and record that CI-safe command in
+`AGENTS.md`. A command that needs a human keypress is not a verified command.
+
+**Multiple stacks in one repo?** A single repo can carry more than one toolchain — a Go
+`services/` beside a Node `apps/`, a Python backend beside a JS frontend. Detect each and
+run the **full verify pass (install · test · lint · build) for every stack
+independently**. `AGENTS.md` then carries one labelled command block per stack, not a
+single global set.
+
+**Some verify-pass output is meant to be committed.** Installing/scaffolding can
+*generate* files that belong in the repo — a freshly created `pnpm-lock.yaml`, an
+`eslint.config.*` you added to make lint non-interactive — as opposed to `node_modules/`
+/ `.venv/`, which don't. Call the to-commit ones out to the user explicitly.
 
 1. **Set up the environment.** Run the install command for the package manager you
    detected: `npm ci` / `pnpm install --frozen-lockfile` / `yarn install --frozen-lockfile`
@@ -138,6 +163,15 @@ they're *not*, warn the user before you create them, or note it as a caveat).
    "not yet verified") plus whatever the user tells you; this branch degrades to "roughly
    what `/init` does + the `AGENTS.md`/`CLAUDE.md` pairing". You may *offer* to help set
    up a minimal test target, but don't push it.
+   - **But when *establishing* test/lint/build conventions is the actual ask** — the user
+     wants TDD, a lint gate, a documented test command — on a repo that has none, don't
+     settle for "intended". **Scaffold one minimal passing example per tool** (a single
+     trivial unit test and a lint config that runs clean — plus a browser/e2e spec *only* if
+     there's a UI surface and the user wants one), actually run them,
+     and stamp the now-real commands ✅. Turning ⚠️-intended into ✅-verified this way is
+     the highest-value move on a greenfield repo — same scaffold-and-run discipline as the
+     rest of the verify pass, you just create the target first. Keep each example minimal
+     and idiomatic: a seed, not a suite.
 
 ## 4. Reconcile — improve mode only
 
@@ -169,6 +203,13 @@ best guess for each, don't interrogate:
 - Conventions that aren't written down anywhere.
 - Scope — monorepo: one root `AGENTS.md`, or per-package? (v1 default: root only;
   per-package is an open question.)
+- **Workflow conventions — offer a default set, let the user opt in/out.** Don't just
+  passively ask "any conventions?". Actively propose a short menu of widely-used
+  practices and recommend the ones that fit: **vertical-slice sizing** (each feature a
+  thin end-to-end testable slice, not a big-bang backend), **TDD**, **small per-slice
+  commits**, **keeping design docs in sync with code as the implementation evolves** —
+  plus branch policy and commit granularity. The user picks which to adopt; write only
+  the chosen ones into `AGENTS.md`. Opinionated default is fine — the user decides.
 - Any contradictions you hit.
 
 A short list, each item pre-filled with your recommendation. Not an interview.
@@ -179,8 +220,14 @@ A short list, each item pre-filled with your recommendation. Not an interview.
 don't apply:
 
 > *Project layout · Environment setup · Running tests · Lint & format · Type checking ·
-> Conventions · Build & misc*
+> Conventions · Workflow conventions · Build & misc*
 
+- **Workflow conventions** (vertical-slice sizing, TDD vs test-after, commit granularity,
+  branch policy, how design docs stay in sync with code, refactor discipline) are
+  first-class content. **Propose a sensible default set and let the user opt in** (step 5) —
+  opinionated defaults are fine, but the user decides which apply; don't silently hard-code
+  your own preferences either way. Write only the chosen ones, and keep each specific and
+  checkable ("one commit per verifiable slice", not "commit often").
 - Keep it **compact** — the < ~200-line guidance applies (it's pulled into every session's
   context via the import; longer = worse adherence + more burned context). If it's heading
   past ~200 lines, **say so in the file**: note that splitting topics into `.claude/rules/`
