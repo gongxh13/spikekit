@@ -12,7 +12,7 @@ down as a record of what you actually proved.
 
 ## The skills
 
-Five skills, in three groups.
+Six skills, in four groups.
 
 ### Explore, then record it — `/spike` → `/spike-wrap`
 
@@ -37,6 +37,41 @@ also tests whether the doc was good enough.
 ![A real /spike-wrap human one-pager — the spike-init design summary: a validated status badge, a "what / how it works" walkthrough, and a before/after card contrasting commands a model merely infers (and gets wrong) against commands actually run and stamped ✅ verified](./images/human-doc-onepager.png)
 
 *A real `/spike-wrap` output — `docs/designs/humans/spike-init/index.html`, rendered.*
+
+### Hand off the whole build — `/spike-goal`
+
+**`/spike-goal`** — the policy layer that runs the loop above *unattended*. Claude Code's
+built-in `/goal "<condition>"` is a good engine — it iterates across turns until a small
+evaluator judges the condition met — but it's policy-free: it doesn't know which work it can
+just build versus which to de-risk first, and when something needs a human it stalls or
+guesses. `/spike-goal` supplies the missing policy. On **every turn** it *triages* the next
+verifiable slice:
+
+- **Certain** → implement it TDD-style (failing test → green → commit), following the repo's
+  `AGENTS.md`.
+- **Uncertain** → run an autonomous `/spike` (the same explore-with-throwaway-code loop, but
+  with the dialogue stripped — it infers and records assumptions instead of asking), prove the
+  approach, `/spike-wrap` it, then build.
+- **Not the model's call** — a credential, a business or aesthetic decision — → **park** it as
+  a card in `docs/pending-decisions/index.html`, leave a `TODO(pending-decision: <id>)` stub at
+  the blocked spot, and move on. A parked item never stalls the rest of the goal.
+
+One thing to get straight: the skill **can't fire `/goal` itself** — no agent turn can start a
+built-in slash command. You launch the loop with permissions pre-granted; the skill governs how
+the model behaves on every turn of it:
+
+```sh
+claude --dangerously-skip-permissions -p "/goal <verifiable condition> — follow the spike-goal skill"
+```
+
+Or run `/spike-goal <高层目标>` interactively first: it translates the fuzzy goal into a
+verifiable condition, makes sure the parked-decisions queue exists, and hands you the exact
+launch command to run. Either way — kick it off, walk away, and come back to either a finished
+goal or a short, well-organized queue of decisions only a human could make.
+
+![Per-turn triage in a /goal loop: each verifiable slice is sorted into certain (TDD build and commit), uncertain (autonomous spike to prove the approach, then wrap and build), or not-the-model's-call (parked as a card in docs/pending-decisions/index.html with a TODO stub) — buildable work ships, human decisions queue up, and the loop never stalls](./images/spike-goal-triage.png)
+
+*The policy `/spike-goal` applies on every turn of the `/goal` loop.*
 
 ### Bootstrap a repo — `/spike-init`
 
@@ -67,6 +102,7 @@ through bundled Playwright scripts. *(The two figures above were made with it.)*
 skills/
   spike/             # /spike — run throwaway experiments to de-risk an approach
   spike-wrap/        # /spike-wrap — consolidate a finished spike into design docs
+  spike-goal/        # /spike-goal — policy for an unattended /goal loop (triage + park)
   spike-init/        # /spike-init — research a repo, write its AGENTS.md/CLAUDE.md
   spike-doc/         # /spike-doc — write docs rich with images & video
   spike-screenshot/  # /spike-screenshot — capture screenshots, figures, short videos
@@ -74,6 +110,7 @@ docs/designs/        # consolidated design records (created by /spike-wrap)
   README.md          # index
   agents/<topic>/    # detailed, for agents (markdown) — source of truth
   humans/<topic>/    # short, for humans (html) — distilled from the agent doc
+docs/pending-decisions/  # parked human decisions from a /spike-goal run (index.html queue)
 .spike/<topic>/      # scratch for an in-progress spike (gitignored; deleted at wrap-up)
 ```
 
@@ -82,14 +119,14 @@ docs/designs/        # consolidated design records (created by /spike-wrap)
 These are personal skills — symlink (or copy) them into `~/.claude/skills/`:
 
 ```sh
-for s in spike spike-wrap spike-init spike-doc spike-screenshot; do
+for s in spike spike-wrap spike-goal spike-init spike-doc spike-screenshot; do
   ln -s "$PWD/skills/$s" ~/.claude/skills/"$s"
 done
 ```
 
-Then `/spike`, `/spike-wrap`, `/spike-init`, `/spike-doc`, and `/spike-screenshot` are
-available in any project.
+Then `/spike`, `/spike-wrap`, `/spike-goal`, `/spike-init`, `/spike-doc`, and
+`/spike-screenshot` are available in any project.
 
 ## Status
 
-Early, but usable. All five skills work.
+Early, but usable. All six skills work.
