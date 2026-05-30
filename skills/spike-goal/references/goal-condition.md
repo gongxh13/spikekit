@@ -69,3 +69,34 @@ Translate the human's high-level ask into observable proof. Examples:
 - **Condition that rewards faking** — e.g. "tests pass" with no "or parked" clause tempts the
   loop to weaken/skip tests to satisfy it. The "parked == done" escape removes that pressure:
   the honest move (park the blocker) is also the one that completes the goal.
+
+## When you're *already inside* a goal with a non-terminating condition
+
+Documenting the anti-patterns above isn't enough: a human can start a goal by typing a raw
+`/goal …` that this skill never prepared — so the condition may have **no "parked == done"
+clause and no turn cap**. When you (the policy) wake up inside such a loop, the failure mode is
+silent and expensive: you keep building, the evaluator keeps saying "not complete" (because the
+project genuinely needs a human unlock it can't see), and the loop never clears. The prepared
+condition prevents this, but you don't always get the prepared condition — so handle it
+explicitly:
+
+**1. Check terminability on the first turn — before doing hours of work.** Look at the active
+goal condition. If it lacks a parked/turn-cap escape *and* the work plainly contains items that
+will need a human (credentials, infra you can't stand up, a business/aesthetic call), then this
+goal **cannot self-terminate**. Say so to the user up front — don't let them discover it after
+20 turns. Recommend they re-issue with a terminable condition (hand them the exact line, per
+"Shape") or `/goal clear`. You can still do useful buildable work meanwhile, but surface the
+non-termination first, not last.
+
+**2. Define your terminal state and stop there — don't grind.** When every currently
+buildable-and-verifiable slice is implemented and everything left is parked, you've reached
+spike-goal's legitimate terminal state. Under a *well-formed* condition the evaluator now clears
+and you're done. Under a *malformed* one it won't clear — and that is **not** a signal to keep
+going. Report the terminal state plainly (what shipped, what's parked, why the rest needs the
+user) and hand the decision back: unlock a parked item, re-issue a terminable goal, or clear it.
+
+**Never** answer an unterminable hook by (a) faking completion, (b) weakening tests to pass, or
+(c) grinding ever-more-marginal scaffolding to look busy — all three violate the skill's honesty
+principle. The honest terminal state — "the buildable work is done and verified; the rest is
+parked and needs you" — is a *complete and correct* outcome for an unattended run, even when the
+literal `/goal` string isn't satisfied. Stopping there, clearly, **is** the job.

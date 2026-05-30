@@ -88,6 +88,16 @@ The loop runs **unattended**, so **you may not ask the user anything mid-run.** 
 Read `AGENTS.md`/`CLAUDE.md`; ensure `docs/pending-decisions/index.html` exists (copy from
 `assets/pending-decisions.html` if not). The `/goal` is already running — you don't start it.
 
+**Check the goal is terminable before you sink hours into it.** If a human typed a raw `/goal`
+(not one this skill prepared), its condition may lack the "parked == done" escape and a turn cap
+— which means it can *never* self-clear once anything needs a human unlock. On turn one, if the
+condition isn't terminable and the work clearly contains human-only items (credentials, infra,
+business calls), **say so to the user up front** and recommend re-issuing a terminable condition
+or `/goal clear`. And when you later reach "every buildable slice done, the rest parked", stop
+there and report — don't grind marginal scaffolding to satisfy an unterminable hook. Full
+guidance: `references/goal-condition.md` → "When you're *already inside* a goal with a
+non-terminating condition".
+
 ### Decompose into the smallest verifiable vertical slices
 
 Each unit is a thin end-to-end path you can verify, not a big-bang pile (per the project's
