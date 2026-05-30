@@ -118,11 +118,17 @@ only spike when a *specific unknown a small experiment would resolve* is in the 
   - **Disproven** → record why; adapt the plan, or park if the way forward is a human call.
   - **Still uncertain** (needs a human/business/credential/aesthetic decision) → **park**.
 
-### Park what isn't yours to decide
+### Park what isn't yours to decide — and close cards when they resolve
 
 Append a card to `docs/pending-decisions/index.html` and leave a `// TODO(pending-decision: <id>)`
 stub at the blocked spot. Format in `references/pending-decisions.md`. Then **move on** — a
 parked item must not stall the rest of the goal.
+
+**The queue is a *living* doc.** The moment a parked decision is answered (user confirms it,
+or you build it), **close its card in that same turn** — mark it resolved, record what was
+decided, and remove the code stub. At the top of every turn with new user input, reconcile the
+queue and close anything now resolved. A "needs you" list cluttered with already-decided items
+is worse than useless. See `references/pending-decisions.md` → "Close the loop".
 
 ### Completion
 

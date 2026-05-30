@@ -77,3 +77,29 @@ in place of the stub — a stub the human will see beats a wrong default they wo
 - **Only park what truly needs a human.** If an experiment could answer it, that's a spike,
   not a parked decision. If a reasonable default is fine and cheap to change, just assume it
   and record the assumption. Parking is for the genuinely-not-yours calls.
+
+## Close the loop — the queue is a *living* doc, not an append-only log
+
+Parking is half the job; **un-parking is the other half**. A parked card becomes stale the
+moment its decision is answered or its work is built — and a queue full of stale "still
+pending" cards is worse than no queue: the human can't tell what actually needs them. So:
+
+- **The instant a parked item is resolved, close its card in the same turn.** Resolved =
+  the user confirmed the decision, OR you implemented it, OR a spike answered it. Don't leave
+  it for "later" — later is how the queue rots.
+- **Closing a card means:** mark it resolved (record *what was decided* — the decision is
+  worth keeping), move it out of the "needs you" view (a separate "已决定 / resolved" group,
+  or a `resolved` badge), **and remove the matching `TODO(pending-decision: <id>)` code stub**
+  (or downgrade it to a plain `TODO(impl)` if only the build remains). Grep
+  `pending-decision:` should only ever list genuinely-open items.
+- **Reconcile at the top of every turn that has new user input.** Before doing new work,
+  scan the queue against what the user just said or what you just shipped, and close anything
+  now resolved. This is the step that was easy to skip in a long mixed interactive/autonomous
+  run — make it a reflex.
+- **"Decision made" ≠ "work done."** If the user decided *what* but the build is still
+  pending, the *decision* card is resolved — re-file the remaining work as an ordinary
+  implementation TODO, not a "pending decision". Keep the two distinct.
+
+The test: at any moment, the "needs you" section should contain *only* things genuinely
+waiting on the human right now. If it shows something already decided or already built, the
+loop wasn't closed.
