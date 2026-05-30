@@ -1,5 +1,10 @@
 # Writing the `/goal` completion condition
 
+This condition goes **into the launch command** — `claude -p "/goal <condition> — follow the
+spike-goal skill"` — written by you, or produced for you by the interactive `/spike-goal` prep
+helper (mode B in `SKILL.md`). The model running the loop does **not** fire `/goal`; it only
+follows the policy once the loop is launched. So the condition has to be right at launch time.
+
 `/goal`'s evaluator (a small fast model) decides each turn whether you're done. It can only
 judge what your output can **prove**. So a good condition is concrete, observable, and — for
 an unattended run — explicitly treats **parked items as a valid way to be done**. Get this
@@ -23,9 +28,18 @@ prematurely) or never stops (a single unresolved item it keeps failing on).
 
 ## Shape
 
+The condition (the part after `/goal`) looks like:
+
 ```
-/goal <observable success> AND every unresolved item is logged in
+<observable success> AND every unresolved item is logged in
 docs/pending-decisions/index.html — or stop after N turns
+```
+
+Dropped into the actual launch the human runs:
+
+```
+claude --dangerously-skip-permissions -p "/goal <observable success> AND every unresolved
+item is logged in docs/pending-decisions/index.html — or stop after N turns — follow the spike-goal skill"
 ```
 
 ## From fuzzy goal → condition
