@@ -98,6 +98,22 @@ there and report — don't grind marginal scaffolding to satisfy an unterminable
 guidance: `references/goal-condition.md` → "When you're *already inside* a goal with a
 non-terminating condition".
 
+### Work in a git worktree (always)
+
+Do the whole run in a dedicated git worktree on a feature branch, so the user's main working
+tree — and any dev server they have running — stays untouched while the loop works. On the
+first turn, after the setup above:
+
+1. Commit any prerequisite artifacts the run builds on (e.g. a design doc this `/goal`
+   implements) to the base branch first, so the worktree contains them.
+2. `git worktree add -b <type>/<topic> ../<repo>-<topic> HEAD`, then do all work inside it.
+3. Install deps in the fresh worktree — `node_modules` and build caches are gitignored and are
+   **not** carried over (e.g. `pnpm install`). Caches that live outside the repo (Go module
+   cache, etc.) need no per-worktree step.
+
+(Verifying auth-gated UI? Run the worktree's dev server on a *different* port so it coexists
+with the user's, and mock the auth endpoints rather than fighting real login.)
+
 ### Decompose into the smallest verifiable vertical slices
 
 Each unit is a thin end-to-end path you can verify, not a big-bang pile (per the project's
@@ -134,8 +150,11 @@ is worse than useless. See `references/pending-decisions.md` → "Close the loop
 
 The condition is met when every slice is **implemented (tests/build green)** or **parked**, and
 the parked items are all in the queue. (This is why the condition must count "parked == done" as
-a terminal state — see `references/goal-condition.md`.) End with a short summary: what shipped,
-what's parked, and that the human should open `docs/pending-decisions/index.html` to continue.
+a terminal state — see `references/goal-condition.md`.) Then, from the main working tree,
+**merge the feature branch back into the base branch and remove the worktree**
+(`git worktree remove --force` + `git branch -d <branch>`). End with a short summary: what
+shipped, what's parked, and that the human should open `docs/pending-decisions/index.html` to
+continue.
 
 ## References
 
