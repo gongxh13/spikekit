@@ -12,7 +12,7 @@ down as a record of what you actually proved.
 
 ## The skills
 
-Six skills, in four groups.
+Seven skills, in five groups.
 
 ### Explore, then record it — `/spike` → `/spike-wrap`
 
@@ -37,6 +37,22 @@ also tests whether the doc was good enough.
 ![A real /spike-wrap human one-pager — the spike-init design summary: a validated status badge, a "what / how it works" walkthrough, and a before/after card contrasting commands a model merely infers (and gets wrong) against commands actually run and stamped ✅ verified](./images/human-doc-onepager.png)
 
 *A real `/spike-wrap` output — `docs/designs/humans/spike-init/index.html`, rendered.*
+
+### Keep the portfolio honest — `/spike-track`
+
+**`/spike-track`** — the layer *above* a single spike. `/spike` explores one idea and
+`/spike-wrap` archives one idea; neither gives you the **portfolio view** across all of
+them. `/spike-track` maintains a cross-session landing board (`IDEAS.md` at the project
+root) on two axes — *status* (💡 idea · 🔬 exploring · 🛠 building · ✅ shipped · 🅿️ parked)
+and *scene* (feature · data/eval · research · learning · tooling) — so a thread you were
+tracking doesn't quietly fall off the radar when you fan out into parallel sessions. It
+anchors itself with a memory pointer plus a `CLAUDE.md` convention (so headless
+`/spike-goal` runs and sub-agents keep it updated too), can bootstrap the board by mining
+past session transcripts, and *optionally* installs a Stop-hook guard that nudges you to
+sync before a substantive session ends — pure-discussion sessions count (they're the
+easiest ideas to lose), trivial ones are skipped. Where `/spike-wrap` archives **one**
+finished spike, `/spike-track` indexes **all** of them: each ✅ row links back to its
+`design.md`.
 
 ### Hand off the whole build — `/spike-goal`
 
@@ -102,6 +118,7 @@ through bundled Playwright scripts. *(The two figures above were made with it.)*
 skills/
   spike/             # /spike — run throwaway experiments to de-risk an approach
   spike-wrap/        # /spike-wrap — consolidate a finished spike into design docs
+  spike-track/       # /spike-track — cross-session idea/landing board (IDEAS.md)
   spike-goal/        # /spike-goal — policy for an unattended /goal loop (triage + park)
   spike-init/        # /spike-init — research a repo, write its AGENTS.md/CLAUDE.md
   spike-doc/         # /spike-doc — write docs rich with images & video
@@ -119,14 +136,14 @@ docs/pending-decisions/  # parked human decisions from a /spike-goal run (index.
 These are personal skills — symlink (or copy) them into `~/.claude/skills/`:
 
 ```sh
-for s in spike spike-wrap spike-goal spike-init spike-doc spike-screenshot; do
+for s in spike spike-wrap spike-track spike-goal spike-init spike-doc spike-screenshot; do
   ln -s "$PWD/skills/$s" ~/.claude/skills/"$s"
 done
 ```
 
-Then `/spike`, `/spike-wrap`, `/spike-goal`, `/spike-init`, `/spike-doc`, and
-`/spike-screenshot` are available in any project.
+Then `/spike`, `/spike-wrap`, `/spike-track`, `/spike-goal`, `/spike-init`, `/spike-doc`,
+and `/spike-screenshot` are available in any project.
 
 ## Status
 
-Early, but usable. All six skills work.
+Early, but usable. All seven skills work.
