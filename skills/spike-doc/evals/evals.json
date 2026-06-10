@@ -11,7 +11,7 @@
         {"text": "产出了一个 .md 文档", "kind": "objective"},
         {"text": "渲染并保存了一张目录结构图 PNG", "kind": "objective"},
         {"text": "md 用相对路径 ![](...png) 嵌入了该图，且文件真实存在于引用路径", "kind": "objective"},
-        {"text": "正文逐个介绍了 skills/ 下的 skill（spike / spike-context / spike-wrap / spike-screenshot / spike-doc）", "kind": "objective"},
+        {"text": "正文逐个介绍了 skills/ 下的 skill（spike / spike-runbook / spike-wrap / spike-screenshot / spike-doc）", "kind": "objective"},
         {"text": "图配在了合适位置、对正文有信息增量（非装饰）", "kind": "qualitative"}
       ]
     },

@@ -1,4 +1,4 @@
-> 注：本 skill 已更名 **spike-context**（原名 spike-init）。正文为设计时的历史记录，保留原名表述。
+> 注：本 skill 已更名 **spike-runbook**（原名 spike-init）。正文为设计时的历史记录，保留原名表述。
 
 ---
 topic: spike-init

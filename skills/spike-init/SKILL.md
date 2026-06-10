@@ -15,7 +15,7 @@ description: >-
   this project", "initialize idea tracking", "I keep losing track of my ideas", "track
   ideas across sessions", "make an idea / landing board", "build a backlog / kanban for
   this project", or "/spike-init". Distinct from Claude Code's built-in `/init`
-  (codebase doc) and from `/spike-context` (verified `AGENTS.md`/`CLAUDE.md` context
+  (codebase doc) and from `/spike-runbook` (verified `AGENTS.md`/`CLAUDE.md` context
   files). Pairs with `/spike-wrap`: spike-wrap archives ONE finished spike into a design
   doc; the board spike-init sets up is the GLOBAL index across all of them (each ✅ row
   links to its design.md).
@@ -123,7 +123,7 @@ of `ideas-guard.js`; remove the `stop_hook_active` early-return to make it a har
 - `/spike-init` → **initialize the index over all of them**: status, scene, next step, and a
   link to each design.md. Init once; the convention + guard keep the portfolio honest; run
   spike-wrap when an entry graduates to ✅ and deserves a full write-up.
-- `/spike-context` (formerly named spike-init) is unrelated to the board: it researches the
+- `/spike-runbook` (formerly named spike-init) is unrelated to the board: it researches the
   repo, *runs* the setup/test/lint commands, and writes the verified `AGENTS.md`/`CLAUDE.md`
   agent-context pair.
 
