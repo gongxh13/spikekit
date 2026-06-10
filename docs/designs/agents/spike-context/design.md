@@ -1,3 +1,5 @@
+> 注：本 skill 已更名 **spike-context**（原名 spike-init）。正文为设计时的历史记录，保留原名表述。
+
 ---
 topic: spike-init
 title: "spike-init — 生成/完善 AGENTS.md + 各开发阶段固定上下文（命令实跑验证过）"

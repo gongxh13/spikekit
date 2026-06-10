@@ -39,8 +39,8 @@
 - **A new idea** (including ones that surfaced in pure discussion/thinking): add a row,
   starting at 💡.
 - **Recall an old idea**: full-text search past sessions.
-- This board is produced by the `spike-track` skill and anchored by a memory note, so new
+- This board is produced by the `spike-init` skill and anchored by a memory note, so new
   sessions know it exists.
-- If the optional Stop hook is installed (`.claude/hooks/ideas-guard.py`): a substantive
+- If the optional Stop hook is installed (`.claude/hooks/ideas-guard.js`): a substantive
   session that ends without syncing the board (and without the line `[IDEAS reviewed]`) gets
   nudged once.
