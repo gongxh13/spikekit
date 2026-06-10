@@ -1,285 +1,134 @@
 ---
 name: spike-init
 description: >-
-  Research a repo, then actually *run* the "how to set up the env / run tests / lint /
-  type-check" commands, and produce a clean pair of agent-context files for the project —
-  `AGENTS.md` (the cross-tool convention every coding agent reads) plus a repo-root
-  `CLAUDE.md` that `@AGENTS.md`-imports it (Claude Code only reads `CLAUDE.md`, not
-  `AGENTS.md`). If those files already exist, *improve* them rather than overwrite —
-  re-research, re-verify, and reconcile each existing claim. Verified commands get a
-  `✅ verified <date>` marker so downstream agents and human reviewers know they were
-  actually executed, not guessed. Use this when the user wants to "set up AGENTS.md /
-  agent context for this project", "this repo has no CLAUDE.md, create one", "the
-  AGENTS.md is out of date, fix it", "bootstrap project context", or "/spike-init". The
-  difference from Claude Code's built-in `/init`: `/init` analyzes the codebase and
-  writes down the commands it *infers*; `/spike-init` runs those commands first and only
-  writes the ones that actually worked.
+  Initialize a project for spikekit's way of working: set up the cross-session
+  "idea → landing" board that stops ideas from getting lost after parallel sessions. A
+  ONE-SHOT scaffolder — it creates a project-root `IDEAS.md` with a two-axis schema (a
+  STATUS axis: 💡 idea / 🔬 exploring / 🛠 building / ✅ shipped / 🅿️ parked, and a
+  SCENE/category axis: feature / data-eval / research / learning / tooling), anchors it
+  with an auto-loaded memory pointer plus a CLAUDE.md convention (so headless
+  `/spike-goal` runs and sub-agents honor it too), can bootstrap the board by mining the
+  project's past session transcripts, and OPTIONALLY installs a Stop-hook guard (Node)
+  that nudges you to sync the board before a substantive session ends. After it runs,
+  the skill steps aside — day-to-day tracking is carried by the convention + the guard,
+  not by re-invoking it. Use this when the user says things like "set up spikekit in
+  this project", "initialize idea tracking", "I keep losing track of my ideas", "track
+  ideas across sessions", "make an idea / landing board", "build a backlog / kanban for
+  this project", or "/spike-init". Distinct from Claude Code's built-in `/init`
+  (codebase doc) and from `/spike-runbook` (verified `AGENTS.md`/`CLAUDE.md` context
+  files). Pairs with `/spike-wrap`: spike-wrap archives ONE finished spike into a design
+  doc; the board spike-init sets up is the GLOBAL index across all of them (each ✅ row
+  links to its design.md).
 ---
 
-# spike-init: agent project context, with the commands actually run
+# Spike-init: initialize the cross-spike landing board
 
 ## Why this exists
 
-When an agent drops into a project, the first thing it gets stuck on is "how do I set up
-the environment, how do I run the tests." Claude Code's built-in `/init` analyzes the
-codebase and writes a starter `CLAUDE.md` with build/test commands — but those commands
-are *inferred*, and inference is often wrong (the classic: see a `pyproject.toml`, write
-`pip install -e .` + `pytest`, then it blows up because the system Python is too old or
-the project actually uses uv/poetry/pdm).
+`/spike` validates one idea; `/spike-wrap` archives that one idea into a per-topic design
+doc. But across many parallel sessions there is no **portfolio view**: which ideas exist,
+what state each is in, and what the next concrete step is. Ideas raised in pure-discussion
+sessions (no file touched, so `/spike-wrap` never fires) are the easiest to lose.
 
-`/spike-init`'s whole reason to exist: **run the commands you're about to recommend, keep
-only the ones that actually work, and stamp them `✅ verified <date>`** — so the next
-agent (and the human reviewing the file) knows they're real, not a guess. That's the
-"spike" in the name: like `/spike`, it establishes facts with real experiments instead of
-on paper. If your difference from `/init` isn't "I verified", you're just re-running
-`/init` — so verify is not optional and there is no `--no-verify`.
+`spike-init` closes that gap by **initializing** the missing layer — one durable board plus
+the conventions that keep it alive. It is invoked once per project (and re-invoked only to
+restructure or re-bootstrap); the *ongoing* tracking is not the skill's job but the system
+it leaves behind:
 
-The output is **a pair of files committed to the repo** (project-level, team-shared — not
-the user's `~/.claude/`):
+1. **Data** — `IDEAS.md` at the project root (the board).
+2. **Anchor (soft)** — a memory pointer so interactive sessions auto-know it exists.
+3. **Convention (soft)** — a `CLAUDE.md` block so headless `/spike-goal` runs and sub-agents
+   (which don't load personal memory) honor it.
+4. **Guard (hard, optional)** — a `Stop` hook (Node) that nudges once if a substantive
+   session ends unsynced. Bundled as an asset; installed only when the user opts in.
 
-- **`AGENTS.md`** at the repo root — the cross-tool convention; Cursor, Codex, Aider,
-  VS Code agents, etc. all read it. Free-form Markdown.
-- **`CLAUDE.md`** at the repo root — first line `@AGENTS.md` to import it, then an
-  optional short "Claude Code notes" section. **You cannot ship only `AGENTS.md`** —
-  Claude Code doesn't read `AGENTS.md` directly, only `CLAUDE.md`.
+**Language:** these instructions are English for convenience — produce the board, the memory
+note, and the CLAUDE.md text in the user's working language. Keep the status/scene emoji and
+the literal sentinel marker as-is (they are machine-facing).
 
-This skill does *not* touch `.claude/rules/*`, `settings.json`, hooks, or Claude Code's
-auto-memory at `~/.claude/projects/<project>/memory/` — leave all of that alone (note
-`.claude/rules/` as a "next step" only, see step 6).
+## The board format (two orthogonal axes)
 
-**Language:** these instructions are written in English for convenience — that's *not* a
-cue to reply in English. Talk to the user, and write the `AGENTS.md` / `CLAUDE.md` prose,
-in whatever language the user works in. Keep machine-facing bits as-is: the `@AGENTS.md`
-import line, command names, the `✅ verified <date>` marker, the provenance HTML comment's
-structure.
+Start from `assets/IDEAS.template.md`. Core ideas:
 
-## 1. Decide the mode: generate or improve
+- **Status axis (progress):** `💡 idea · 🔬 exploring · 🛠 building · ✅ shipped · 🅿️ parked`.
+- **Scene axis (nature):** `🏗️ feature · 📊 data/eval · 🔬 research · 🧠 learning · 🔧 tooling`.
+  Tag it on each section header (most themes are mono-scene). Add a per-row category column
+  only if single ideas genuinely span scenes.
+- **Sections = themes/initiatives**, each a table. One sub-idea per row, id-prefixed
+  (A1, A2, B1…). Row schema: `# | idea | status | last-touched | next-step`.
+  - `last-touched` = `MM-DD · *session title*` (traceable back to where it was discussed).
+  - `next-step` = the next concrete action, not a vague aspiration.
+- A `Parked / needs-decision` section collects open decisions and status-uncertain rows.
+- Each `✅` row should link to its `docs/designs/agents/<topic>/design.md` when one exists
+  (the `/spike-wrap` output) — the board indexes them.
 
-Look for existing agent-context files at the repo root and the usual spots:
-`AGENTS.md`, `CLAUDE.md`, `.claude/CLAUDE.md` — and also `.cursorrules`,
-`.windsurfrules`, `.github/copilot-instructions.md`.
+## 1. Bootstrap the board from history (best-effort)
 
-- **None found → `generate` mode.**
-- **Any of them found → `improve` mode.** Read them all in. Treat every *specific* claim
-  inside them ("Node 14+", "`yarn test`", "handlers live in `src/api/`") as a hypothesis
-  to verify, not as truth — you'll reconcile each one in step 4.
+If the project already has sessions, reconstruct the board instead of starting blank:
 
-Tell the user which mode you're in and what you found.
+- List past sessions for this project. If session-management MCP tools are available, use
+  them; otherwise read transcripts directly from `~/.claude/projects/<encoded-cwd>/*.jsonl`
+  (encoded-cwd = the absolute path with `/` → `-`).
+- Extract the highest-signal content cheaply: the **human turns** are the ideas. A compact
+  pass (skip tool noise / system reminders / command output):
+  `jq -r 'select(.type=="user") | .message.content as $c | (if ($c|type)=="string" then $c else ([$c[]?|select(.type=="text")|.text]|join(" ")) end)' <file>.jsonl`
+- Group extracted ideas into themes, infer each one's status from what actually shipped
+  (check the filesystem: design docs, code, tests), tag scenes, and write `IDEAS.md`.
+- Flag anything you can't confirm as `🛠 needs-confirm` under the parked section rather than
+  guessing — accuracy is the whole point.
 
-## 2. Research pass — read-only, fast
+If there's no history, just instantiate the template and grow it from here.
 
-Gather the signals that pin down the **environment + dev/test workflow**. This is a
-quick orientation, not a deep dive — you can run it in a subagent to save main context if
-the repo is large. Roughly in priority order:
+## 2. Anchor it (so every future session knows)
 
-- **Lockfile → language/runtime & package manager (highest signal).** The lockfile, not
-  the manifest, tells you which tool the maintainers actually use:
-  - Node: `pnpm-lock.yaml` → pnpm · `yarn.lock` → yarn · `bun.lockb` → bun ·
-    `package-lock.json` → npm
-  - Python: `uv.lock` → uv · `poetry.lock` → poetry · `pdm.lock` → pdm ·
-    `Pipfile.lock` → pipenv · else `pyproject.toml` / `requirements*.txt` → pip + venv
-  - Other: `Cargo.lock` → cargo · `go.mod` / `go.sum` → go · `Gemfile.lock` → bundler ·
-    `pom.xml` → maven · `build.gradle(.kts)` → gradle · `composer.lock` → composer · etc.
-- **Version pins:** `.nvmrc` / `.node-version` / `package.json` `engines`;
-  `pyproject.toml` `requires-python` / `.python-version`; `rust-toolchain(.toml)`; etc.
-- **CI config** (`.github/workflows/*`, `.gitlab-ci.yml`, `.circleci/config.yml`, …) —
-  the setup + test + lint commands the maintainers *actually trust and run*. Often the
-  single best source.
-- **Task / script definitions:** `package.json` `scripts`, `Makefile`, `justfile`,
-  `tox.ini` / `pyproject.toml [tool.tox]`, `noxfile.py`, `composer.json` `scripts`,
-  `Taskfile.yml`.
-- **Dev container / nix:** `.devcontainer/`, `flake.nix`, `shell.nix`,
-  `.tool-versions` (asdf/mise).
-- **Human-written docs:** `README`, `CONTRIBUTING`, `docs/` — look for conventions and a
-  "how to develop / hack on this" section.
-- **Repo shape:** top-level directories, where source vs. tests live, whether it's a
-  monorepo (workspaces / `packages/*`). (v1 still produces a single root `AGENTS.md` —
-  see step 5 — but you want to know.)
-- **UI surface? (decides whether e2e is even applicable.)** Check for a frontend /
-  browser-facing app — a React/Vue/Svelte/Next app, an `index.html` entry, a `public/`
-  served by a dev server. **If there is one**, a browser/e2e layer (Playwright/Cypress)
-  is in scope — propose it, and scaffold/verify it under step 3. **If there isn't** (a Go
-  library, a CLI, a headless API), e2e doesn't apply — don't scaffold or recommend it.
-  Make this an explicit check, not an afterthought.
+- **Memory pointer:** write a small project-scoped memory note saying the board lives at
+  `IDEAS.md`, summarizing the two axes, and instructing: *keep rows updated proactively when
+  any idea changes state — pure-discussion / thinking sessions count too.*
+- **CLAUDE.md convention:** add (or append) a section to the project-root `CLAUDE.md` that
+  states the same rule as a **default session responsibility** (so `/spike-goal` and
+  sub-agents obey it). Include the reconciliation contract from step 3.
 
-**Don't infer the install command straight from the manifest.** `pyproject.toml`
-existing ≠ use pip; `package.json` existing ≠ use npm. Priority is **lockfile → its
-package manager > the command CI actually runs > README/CONTRIBUTING** — then verify it.
+## 3. The contract you leave behind (every future session)
 
-## 3. Verify pass — the differentiator: actually run the commands
+- Before finishing a session, review whether any idea **changed state** or a **new
+  idea/insight emerged** — *pure discussion, thinking, and Q&A count*, and are often the most
+  valuable and easiest to lose.
+- If yes → update the matching row (`status / last-touched / next-step`) or add a row (new
+  idea starts at 💡).
+- If a substantive session genuinely produced no board change → end the reply with the
+  literal sentinel line `[IDEAS reviewed]`.
+- Trivial typo / one-liner / quick-lookup sessions → skip; don't touch the board.
 
-This is the step that makes `/spike-init` worth using. **It always runs — no
-`--no-verify`, no escape hatch.** Before running anything, tell the user "I'm going to run
-`X` to verify the setup/test commands" — warn, then run. Try not to dirty tracked files
-(install artifacts like `node_modules/`, `.venv/` are usually already gitignored; if
-they're *not*, warn the user before you create them, or note it as a caveat).
+## 4. Optional: install the enforcement guard (opt-in)
 
-**Run everything non-interactively.** Some standard commands block on a prompt
-(`next lint` / ESLint init, `npm init`, framework scaffolders, `gh auth login`) and will
-hang the agent indefinitely waiting for a keypress. Anticipate it: pass the
-non-interactive flag, redirect `< /dev/null`, or — if the project's *own* documented
-command is interactive — reconfigure it into a CI-safe form (e.g. replace `next lint`
-with a committed `eslint.config.*` + `eslint .`) and record that CI-safe command in
-`AGENTS.md`. A command that needs a human keypress is not a verified command.
+spikekit ships no hooks by default, so this is **per-project and opt-in**. When the user
+wants enforcement (mirrors how `/spike-doc` and `/spike-screenshot` bundle their scripts;
+the guard is Node — no extra runtime, Claude Code itself runs on it):
 
-**Multiple stacks in one repo?** A single repo can carry more than one toolchain — a Go
-`services/` beside a Node `apps/`, a Python backend beside a JS frontend. Detect each and
-run the **full verify pass (install · test · lint · build) for every stack
-independently**. `AGENTS.md` then carries one labelled command block per stack, not a
-single global set.
+1. `mkdir -p <project>/.claude/hooks && cp assets/ideas-guard.js <project>/.claude/hooks/ && chmod +x <project>/.claude/hooks/ideas-guard.js`
+2. Merge `assets/stop-hook.settings.json` into `<project>/.claude/settings.json` (create it
+   if absent; merge into the `hooks.Stop` array if it exists — don't clobber other hooks).
+3. **Verify, don't assume** — feed the script synthetic transcripts on stdin and confirm:
+   trivial → pass; substantive-unsynced → blocks with a reason; board-edited or sentinel
+   present → pass; `stop_hook_active:true` → pass (never traps). Then tell the user it's live
+   from the *next* session (hooks load at session start).
 
-**Some verify-pass output is meant to be committed.** Installing/scaffolding can
-*generate* files that belong in the repo — a freshly created `pnpm-lock.yaml`, an
-`eslint.config.*` you added to make lint non-interactive — as opposed to `node_modules/`
-/ `.venv/`, which don't. Call the to-commit ones out to the user explicitly.
+Behavior is intentionally mild: at most one nudge per stop, judged by whether the session had
+real content (not by whether files changed). Tune via the `TRIVIAL_MAX_*` constants at the top
+of `ideas-guard.js`; remove the `stop_hook_active` early-return to make it a hard gate.
 
-1. **Set up the environment.** Run the install command for the package manager you
-   detected: `npm ci` / `pnpm install --frozen-lockfile` / `yarn install --frozen-lockfile`
-   / `uv sync --locked` / `poetry install` / `pdm install` / `cargo fetch` /
-   `go mod download` / `bundle install` / … Record the exit code and the tail of the
-   output. If it fails, fall back to the next candidate (e.g. `npm install`; for Python
-   with no lockfile, `python -m venv .venv && pip install -e ".[dev]"`) — **and record the
-   dead end** in the output's "known gotchas" / reconcile notes. A failed verify isn't a
-   stop sign, it's information; that decision trail is exactly what's most useful to the
-   next agent.
-   - **Don't install against the system interpreter blind.** Python especially: the system
-     Python frequently doesn't satisfy `requires-python`. Tools like uv/poetry pick or
-     fetch a suitable interpreter; a bare `pip install -e .` against system Python fails
-     with `requires a different Python`. If that's what you hit, that's a fact to put in
-     the `AGENTS.md` Environment setup section ("use uv, not bare `pip install`").
-2. **Run the tests.** Run the detected test command: `npm test` / `uv run pytest` /
-   `pytest` / `cargo test` / `go test ./...` / `tox` / `make test` / … Confirm it
-   *actually executed the suite* (not "no tests found"). Record a one-line result, e.g.
-   "1493 passed, 24 skipped".
-3. **Lint / format / type check.** Run them too if you reasonably can (`npm run check`,
-   `ruff check`, `mypy`, `tsc --noEmit`, …). Less critical than the test run, but a
-   confirmed command beats an inferred one.
-4. **Needs an external dependency to run** (a DB, Redis, a secret you don't have)? **Do
-   not fake it.** Write it in the output as a known prerequisite ("the test suite needs a
-   local Postgres — see X") rather than claiming it ran green. The model's instinct here
-   is to pretend it passed; resist that.
-5. **New / empty project** — no test suite, no real build? Nothing to verify — **say so
-   plainly.** The file then only records the conventions you *intend to adopt* (marked
-   "not yet verified") plus whatever the user tells you; this branch degrades to "roughly
-   what `/init` does + the `AGENTS.md`/`CLAUDE.md` pairing". You may *offer* to help set
-   up a minimal test target, but don't push it.
-   - **But when *establishing* test/lint/build conventions is the actual ask** — the user
-     wants TDD, a lint gate, a documented test command — on a repo that has none, don't
-     settle for "intended". **Scaffold one minimal passing example per tool** (a single
-     trivial unit test and a lint config that runs clean — plus a browser/e2e spec *only* if
-     there's a UI surface and the user wants one), actually run them,
-     and stamp the now-real commands ✅. Turning ⚠️-intended into ✅-verified this way is
-     the highest-value move on a greenfield repo — same scaffold-and-run discipline as the
-     rest of the verify pass, you just create the target first. Keep each example minimal
-     and idiomatic: a seed, not a suite.
+## Relationship to the rest of spikekit
 
-## 4. Reconcile — improve mode only
+- `/spike` → explore one idea. `/spike-wrap` → archive that one idea (design.md).
+- `/spike-init` → **initialize the index over all of them**: status, scene, next step, and a
+  link to each design.md. Init once; the convention + guard keep the portfolio honest; run
+  spike-wrap when an entry graduates to ✅ and deserves a full write-up.
+- `/spike-runbook` (formerly named spike-init) is unrelated to the board: it researches the
+  repo, *runs* the setup/test/lint commands, and writes the verified `AGENTS.md`/`CLAUDE.md`
+  agent-context pair.
 
-For each *specific* claim in the existing file(s):
+## Files in this skill
 
-- **Contradicted by a verified fact** → fix it in place, and tell the user what changed
-  and why ("`yarn test` → `npm test`: the lockfile is `package-lock.json` and CI caches
-  npm").
-- **Confirmed** → keep it (tighten the wording if it helps).
-- **Unverifiable but not contradicted** (release process, "ask Bob", a business rule) →
-  **leave it untouched.** Human knowledge an agent can't verify is still valuable.
-- **References a path/script that doesn't exist** (e.g. mentions `scripts/build.sh` but
-  there's no `scripts/` directory) → **don't silently delete it — raise it with the
-  user**: "the file mentions `scripts/build.sh` but there's no `scripts/` directory —
-  remove that line? or is it something not checked in?"
-- **Too vague to be useful** ("keep it clean", "use the existing style") → keep the
-  human's intent, but strengthen it with the concrete facts you verified (`npm run check`
-  / prettier / eslint configs) — don't just delete it.
-
-Preserve the existing file's structure and headings; minimize churn so the diff is easy
-to review.
-
-## 5. Ask only the gaps
-
-After research + verify you usually have what you need. Ask only about — and propose your
-best guess for each, don't interrogate:
-
-- What you couldn't verify (which services/secrets a full test run needs).
-- Conventions that aren't written down anywhere.
-- Scope — monorepo: one root `AGENTS.md`, or per-package? (v1 default: root only;
-  per-package is an open question.)
-- **Workflow conventions — offer a default set, let the user opt in/out.** Don't just
-  passively ask "any conventions?". Actively propose a short menu of widely-used
-  practices and recommend the ones that fit: **vertical-slice sizing** (each feature a
-  thin end-to-end testable slice, not a big-bang backend), **TDD**, **small per-slice
-  commits**, **keeping design docs in sync with code as the implementation evolves** —
-  plus branch policy and commit granularity. The user picks which to adopt; write only
-  the chosen ones into `AGENTS.md`. Opinionated default is fine — the user decides.
-- Any contradictions you hit.
-
-A short list, each item pre-filled with your recommendation. Not an interview.
-
-## 6. Write the pair of files
-
-**`AGENTS.md`** (repo root). Suggested sections — adapt to the project, drop ones that
-don't apply:
-
-> *Project layout · Environment setup · Running tests · Lint & format · Type checking ·
-> Conventions · Workflow conventions · Build & misc*
-
-- **Workflow conventions** (vertical-slice sizing, TDD vs test-after, commit granularity,
-  branch policy, how design docs stay in sync with code, refactor discipline) are
-  first-class content. **Propose a sensible default set and let the user opt in** (step 5) —
-  opinionated defaults are fine, but the user decides which apply; don't silently hard-code
-  your own preferences either way. Write only the chosen ones, and keep each specific and
-  checkable ("one commit per verifiable slice", not "commit often").
-- Keep it **compact** — the < ~200-line guidance applies (it's pulled into every session's
-  context via the import; longer = worse adherence + more burned context). If it's heading
-  past ~200 lines, **say so in the file**: note that splitting topics into `.claude/rules/`
-  is the next step (don't actually create those files in v1).
-- Instructions must be **specific and checkable** — "`uv run pytest`" not "run the tests";
-  "2-space indent" not "format nicely"; "API handlers live in `src/api/handlers/`" not
-  "keep it organized".
-- **Stamp verified commands `✅ verified <YYYY-MM-DD>`** — put it next to the section
-  heading, e.g. `## Running tests  ✅ verified 2026-05-13`. Only on what you actually ran.
-- **Top-of-file provenance HTML comment** — block HTML comments are stripped from
-  `CLAUDE.md` before it's injected into context, so this is free, and it gives the next
-  re-run an anchor:
-
-  ```
-  <!-- Generated by spike-init on <date>. The commands under "Environment setup",
-       "Running tests", and "Lint & format" / "Type checking" were executed and verified
-       on this date. Re-run /spike-init to refresh. -->
-  ```
-
-  In improve mode, say "Updated by spike-init on <date>" and note that corrections from
-  the previous version are listed in the run summary (and/or inline `<!-- was: ... -->`
-  comments next to the lines you changed).
-
-**`CLAUDE.md`** (repo root):
-
-- First line: `@AGENTS.md`.
-- Then an optional short "Claude Code notes" section, e.g.: "The standing project context
-  (env setup, tests, lint, conventions) lives in `AGENTS.md`, imported above — edit it
-  there so Cursor/Codex/other agents stay in sync." and "Commands marked `✅ verified` in
-  `AGENTS.md` were actually run when this file was generated — trust them over guessing."
-- **If the repo already has a non-empty `CLAUDE.md`**, fold the `@AGENTS.md` import line
-  in at the top — don't clobber its existing content. (A symlink — `ln -s AGENTS.md
-  CLAUDE.md` — is an alternative, but on Windows symlinks need admin/developer mode, so
-  prefer the import; it's more portable.)
-
-v1 does **not** generate `.claude/rules/*` or touch `settings.json`/hooks. If something
-must run at a fixed lifecycle point ("run lint before every commit"), that belongs in a
-hook in `settings.json` — out of scope here; mention it as a follow-up if it comes up,
-don't implement it.
-
-## 7. Show the user, then write
-
-Show the proposed files before writing anything to disk:
-
-- **generate mode** — show the full `AGENTS.md` and `CLAUDE.md` you intend to write.
-- **improve mode** — show the diff against the existing file(s), plus a short list of the
-  corrections you made and *why* (and flag anything you're raising rather than changing —
-  the missing-path case, contradictions).
-
-Write to disk only after the user confirms. When it's done, say so:
-
-> Done. Wrote `AGENTS.md` + `CLAUDE.md` (which `@AGENTS.md`-imports it). The commands
-> under the `✅ verified` sections were actually run just now — a fresh agent reading
-> `CLAUDE.md`/`AGENTS.md` should be able to set up the env and run the tests first try,
-> without guessing.
+- `assets/IDEAS.template.md` — starter board (two-axis schema + maintenance footer).
+- `assets/ideas-guard.js` — the optional Stop-hook guard (Node, bundled asset).
+- `assets/stop-hook.settings.json` — the `hooks.Stop` snippet to merge into settings.json.
