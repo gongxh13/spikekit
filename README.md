@@ -2,6 +2,16 @@
 
 An AI-native take on *figuring out what to build and how* — shipped as Claude Code skills.
 
+Exploring an unfamiliar domain used to mean becoming half an expert before you could
+start: learning was slow, trying things was expensive, and so most ideas died at the
+threshold — "I don't know how" ended them. AI collapses both cost curves at once. It's a
+domain tutor on call, and it can turn an idea into a running experiment in hours — which
+moves you up a level, from executor to the one *steering* the exploration: you bring
+intent and judgment, the AI brings knowledge and speed. spikekit turns that collaboration
+into a repeatable loop: learn and validate in the same motion, evidence before
+commitment, until the idea is a proven MVP — or a documented dead end, which is worth
+keeping too.
+
 Most of today's "spec engineering" tooling (speckit, openspec, …) keeps the old
 **design → develop → test** template and just points an LLM at each box. spikekit drops
 the upfront speculative spec. You don't write down what you *think* will work and hope —
