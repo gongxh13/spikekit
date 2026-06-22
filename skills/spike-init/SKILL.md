@@ -61,6 +61,11 @@ Start from `assets/IDEAS.template.md`. Core ideas:
 - A `Parked / needs-decision` section collects open decisions and status-uncertain rows.
 - Each `✅` row should link to its `docs/designs/agents/<topic>/design.md` when one exists
   (the `/spike-wrap` output) — the board indexes them.
+- **One file, kept short by folding — not split.** The board stays a single `IDEAS.md`. A
+  trailing `📦 Archived` section, marked by the literal `<!-- archived-below -->` line, holds
+  rows that have stopped being actionable (✅ shipped, abandoned). The active board above the
+  marker is the part that must stay skimmable; the archive can grow freely. The marker is
+  machine-read by the guard to measure active-board length — keep it verbatim.
 
 ## 1. Bootstrap the board from history (best-effort)
 
@@ -94,7 +99,12 @@ If there's no history, just instantiate the template and grow it from here.
   idea/insight emerged** — *pure discussion, thinking, and Q&A count*, and are often the most
   valuable and easiest to lose.
 - If yes → update the matching row (`status / last-touched / next-step`) or add a row (new
-  idea starts at 💡).
+  idea starts at 💡). **Before adding a row, scan existing rows — active *and* the archived
+  section — for the same topic, and update/merge that one instead of creating a duplicate.**
+- **Keep the active board short by folding, not deleting.** When a row reaches ✅ shipped (or
+  is abandoned) and is no longer actionable, move it below the `<!-- archived-below -->` marker
+  into the `📦 Archived` section, keeping its `design.md` link. The single `IDEAS.md` is never
+  split into separate files.
 - If a substantive session genuinely produced no board change → end the reply with the
   literal sentinel line `[IDEAS reviewed]`.
 - Trivial typo / one-liner / quick-lookup sessions → skip; don't touch the board.
@@ -109,13 +119,17 @@ the guard is Node — no extra runtime, Claude Code itself runs on it):
 2. Merge `assets/stop-hook.settings.json` into `<project>/.claude/settings.json` (create it
    if absent; merge into the `hooks.Stop` array if it exists — don't clobber other hooks).
 3. **Verify, don't assume** — feed the script synthetic transcripts on stdin and confirm:
-   trivial → pass; substantive-unsynced → blocks with a reason; board-edited or sentinel
-   present → pass; `stop_hook_active:true` → pass (never traps). Then tell the user it's live
-   from the *next* session (hooks load at session start).
+   trivial → pass; substantive-unsynced → blocks with a sync reason; sentinel present →
+   pass; `stop_hook_active:true` → pass (never traps); and an active board with more than
+   `ACTIVE_SHIPPED_SOFT_MAX` ✅ rows *above* the `<!-- archived-below -->` marker → blocks with
+   an archive reason (even when the board was edited). Then tell the user it's live from the
+   *next* session (hooks load at session start).
 
 Behavior is intentionally mild: at most one nudge per stop, judged by whether the session had
-real content (not by whether files changed). Tune via the `TRIVIAL_MAX_*` constants at the top
-of `ideas-guard.js`; remove the `stop_hook_active` early-return to make it a hard gate.
+real content (not by whether files changed). The nudge does triple duty — sync the board,
+**de-duplicate** before adding a row, and **archive** done rows once they pile up on the active
+board. Tune via the `TRIVIAL_MAX_*` and `ACTIVE_SHIPPED_SOFT_MAX` constants at the top of
+`ideas-guard.js`; remove the `stop_hook_active` early-return to make it a hard gate.
 
 ## Relationship to the rest of spikekit
 

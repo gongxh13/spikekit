@@ -36,6 +36,36 @@ questions, talk things through, and keep `NOTES.md` in that language.
 
 ## 1. Set up the scratch space
 
+### 1a. First, check what already exists — don't start a duplicate
+
+Before you pick a slug or create anything, find out whether this spike (or something close
+enough to be the same work) has already been started or already finished. Slugs are
+free-form and you invent them per session, so the same idea easily lands under two
+different names — `websocket-reconnect` one day, `ws-retry` the next — and you end up
+re-running work that's already done. So look in **both** places:
+
+- **In-progress spikes** — list the topic dirs under `.spike/` (each has a `NOTES.md`).
+- **Finished, consolidated spikes** — read `docs/designs/README.md` (the index of design
+  records produced by `/spike-wrap`). A topic here means the work converged and was
+  written up; the source of truth is `docs/designs/agents/<topic>/design.md`.
+
+Then judge — by *topic*, not by exact slug — whether what the user is asking for matches
+something you found:
+
+- **Matches an in-progress spike** → you're resuming. Jump to the resume path in 1c.
+- **Matches a finished design record** → don't silently re-spike it. Tell the user it
+  looks already done, point at `docs/designs/agents/<topic>/design.md`, and ask (with the
+  AskUserQuestion tool) what they want: *(a)* just read the existing design, *(b)* this is
+  genuinely a new angle / the old conclusion no longer holds — start a fresh spike anyway
+  (say why it's distinct, and pick a slug that won't collide), or *(c)* re-open / revise
+  the old one. Recommend the option that fits what they said; let them decide.
+- **No match** → it's genuinely new; continue to 1b.
+
+If neither `.spike/` nor `docs/designs/README.md` exists yet, there's no history to
+check — just continue.
+
+### 1b. Create the scratch space (new spike)
+
 Pick a short kebab-case `<topic>` slug (e.g. `stripe-payout-integration`, `pdf-export`,
 `websocket-reconnect`). Create `.spike/<topic>/` in the project root.
 
@@ -65,9 +95,11 @@ Where we are right now / what's next.
 If this is a git repo and `.spike/` isn't already ignored, add `.spike/` to `.gitignore`
 and mention it — the scratch dir is throwaway and gets deleted at wrap-up.
 
+### 1c. Resuming an in-progress spike
+
 **If `.spike/<topic>/NOTES.md` already exists, you're resuming**: read it (and skim the
 artifacts) to restore context, tell the user where things stand, and continue from
-"Current state". If there are several topics under `.spike/`, list them and ask which.
+"Current state". If 1a turned up several topics under `.spike/`, list them and ask which.
 
 ## 2. Align context with the user — do this before touching code
 

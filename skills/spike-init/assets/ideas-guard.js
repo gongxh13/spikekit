@@ -15,6 +15,12 @@
  * easiest to lose. It never traps the user in a loop, and fails open on any error
  * (never wedge a session because the guard misbehaved).
  *
+ * The nudge does double duty. Beyond "sync the board" it also reminds the model to (a)
+ * de-duplicate — scan existing rows for the same topic before adding a new one — and (b)
+ * archive: when too many done/retired rows pile up on the ACTIVE board (counted above the
+ * ARCHIVE_MARKER), nudge to move them into the folded archived section so the live board
+ * stays short. One board file, kept short by folding — not split across files.
+ *
  * The "no change" acknowledgement is the literal sentinel line `[IDEAS reviewed]` — the
  * spike-init SKILL.md instructs the model to emit it. Keep both in sync if you change it.
  */
@@ -26,6 +32,11 @@ const TRIVIAL_MAX_ASSISTANT_CHARS = 600;
 const SENTINEL = "[IDEAS reviewed]";
 const BOARD = "IDEAS.md";
 const EDIT_TOOLS = new Set(["Edit", "Write", "MultiEdit"]);
+// Everything below this literal marker in IDEAS.md is the folded "archived" section and is
+// ignored when measuring how long the ACTIVE board has grown. Keep in sync with the template.
+const ARCHIVE_MARKER = "<!-- archived-below -->";
+// How many ✅-shipped rows may sit on the ACTIVE board before we nudge to archive them.
+const ACTIVE_SHIPPED_SOFT_MAX = 6;
 
 function userText(content) {
   if (typeof content === "string") return content;
@@ -36,6 +47,26 @@ function userText(content) {
       .join(" ");
   }
   return "";
+}
+
+// True when the ACTIVE board (everything above ARCHIVE_MARKER) carries more ✅-shipped table
+// rows than ACTIVE_SHIPPED_SOFT_MAX — i.e. done work is cluttering the live board and should
+// be folded down. Rows already in the archived section don't count. Fails open (false).
+function boardNeedsArchive(boardPath) {
+  let text;
+  try {
+    text = fs.readFileSync(boardPath, "utf8");
+  } catch (e) {
+    return false;
+  }
+  const idx = text.indexOf(ARCHIVE_MARKER);
+  const active = idx === -1 ? text : text.slice(0, idx);
+  let shippedRows = 0;
+  for (const raw of active.split("\n")) {
+    const line = raw.trim();
+    if (line.startsWith("|") && line.includes("✅")) shippedRows++;
+  }
+  return shippedRows > ACTIVE_SHIPPED_SOFT_MAX;
 }
 
 function main() {
@@ -108,17 +139,37 @@ function main() {
     process.exit(0);
   }
 
-  // Already reconciled this session -> pass.
-  if (boardEdited || lastAssistantText.includes(SENTINEL)) process.exit(0);
+  // Explicit reconciliation this session -> full review acknowledged, pass.
+  if (lastAssistantText.includes(SENTINEL)) process.exit(0);
 
-  const reason =
-    "[spike-init board guard] This session had substantive content but IDEAS.md was not synced. " +
-    "Review: did any idea change state, or did a new idea / conclusion emerge " +
-    "(pure discussion, thinking, and Q&A count — often more important than code)?\n" +
-    "- If yes -> update the matching IDEAS.md row (status / last-touched / next-step), or add a row.\n" +
-    "- If genuinely none -> end your reply with the line [IDEAS reviewed].\n" +
-    "(Trivial typo / one-line changes can be ignored.)";
-  process.stdout.write(JSON.stringify({ decision: "block", reason: reason }));
+  // Two independent reasons to nudge: the board wasn't synced, and/or done rows have piled
+  // up on the active board and want archiving. Either can fire; both share one block.
+  const needsSync = !boardEdited;
+  const needsArchive = boardNeedsArchive(path.join(cwd, BOARD));
+  if (!needsSync && !needsArchive) process.exit(0);
+
+  const parts = ["[spike-init board guard]"];
+  if (needsSync) {
+    parts.push(
+      "This session had substantive content but IDEAS.md was not synced. " +
+        "Review: did any idea change state, or did a new idea / conclusion emerge " +
+        "(pure discussion, thinking, and Q&A count — often more important than code)?\n" +
+        "- If yes -> update the matching IDEAS.md row (status / last-touched / next-step), or add a row.\n" +
+        "  Before adding, scan existing rows (active AND the archived section) for the same topic — " +
+        "update or merge that one instead of creating a duplicate.\n" +
+        "- If genuinely none -> end your reply with the line " + SENTINEL + ".\n" +
+        "(Trivial typo / one-line changes can be ignored.)"
+    );
+  }
+  if (needsArchive) {
+    parts.push(
+      "The active board has accumulated done/retired rows. Fold ✅-shipped and abandoned ideas " +
+        "down into the archived section (below the \"" + ARCHIVE_MARKER + "\" marker), keeping each " +
+        "design.md link, so the live board stays short. If it's already tidy, end your reply with the line " +
+        SENTINEL + "."
+    );
+  }
+  process.stdout.write(JSON.stringify({ decision: "block", reason: parts.join("\n\n") }));
   process.exit(0);
 }
 
