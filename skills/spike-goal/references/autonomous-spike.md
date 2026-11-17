@@ -52,6 +52,6 @@ When consolidating, follow `/spike-wrap` if installed, with two changes for unat
   human can clean it up later.
 - Don't ask to confirm title/status — infer them and proceed.
 
-The design docs it produces (`docs/designs/agents/<topic>/design.md` + the human HTML) are
-exactly what a later human or a fresh implementing agent needs. Producing them unattended is
-fine; they're verifiable from the spike's experiments.
+The design doc it produces (`docs/designs/agents/<topic>/design.md`, current-state, with the
+index regenerated) is exactly what a later human or a fresh implementing agent needs.
+Producing it unattended is fine; its claims are verifiable from the spike's scratch dir.

@@ -13,17 +13,13 @@ finished spike into design docs), `/spike-runbook` (research a repo and write it
 
 - `skills/<name>/SKILL.md` — one skill per directory. YAML frontmatter (`name`,
   `description`) + a Markdown body that *is* the skill's instructions.
-  - `skills/<name>/assets/` — optional templates/examples a skill starts from or copies
-    (e.g. `skills/spike-wrap/assets/summary.html`, `skills/spike-wrap/assets/index.html`).
+  - `skills/<name>/assets/` — optional templates/scripts a skill copies or runs
+    (e.g. `skills/spike-wrap/assets/gen-design-index.sh`).
 - `docs/designs/` — durable design records, produced by `/spike-wrap`:
-  - `docs/designs/README.md` — the index table (Topic · Title · Status · Date · Gist ·
-    agent doc · human doc).
-  - `docs/designs/agents/<topic>/design.md` — the detailed, agent-facing doc; **the
-    source of truth** an implementer builds from. An `assets/` dir alongside it holds
-    diagrams, screenshots, sample files.
-  - `docs/designs/humans/<topic>/index.html` — a short, skimmable, self-contained HTML
-    one-pager (inline CSS) for humans.
-  - `docs/designs/humans/index.html` — browsable index of the human one-pagers.
+  - `docs/designs/README.md` — the index table, **generated** from each design.md's
+    frontmatter by `bash skills/spike-wrap/assets/gen-design-index.sh`; never edit it by hand.
+  - `docs/designs/agents/<topic>/design.md` — **the source of truth**, describing the
+    current state. An `assets/` dir alongside it holds only figures of the current design.
 - `.spike/<topic>/` — scratch space for an in-progress spike. **Gitignored, disposable;
   `/spike-wrap` offers to delete it once consolidated — the user decides.** Never commit
   it; don't reference it from committed docs.
@@ -64,11 +60,12 @@ agent can implement from it.
   `✅ verified <date>` marker, provenance HTML-comment blocks). Follow that pattern in any
   new or edited skill.
 
-**Design records:** always a *pair* — the detailed agent Markdown
-(`docs/designs/agents/<topic>/design.md`, the source of truth) and the short human HTML
-(`docs/designs/humans/<topic>/index.html`). When you add or change one, update the other,
-the `docs/designs/README.md` index row, and `docs/designs/humans/index.html`. Human HTML
-pages are self-contained (inline CSS, no external assets).
+**Design records:** one current-state doc per topic, `docs/designs/agents/<topic>/design.md`,
+with frontmatter `title` / `status` (implemented · partial · planned · paused · abandoned) /
+`summary` / `related_code`. When the thing it describes changes, rewrite the affected section
+in place — no dated changelog sections, no decision log, no superseded alternatives kept
+alongside, no numbered headings (reference sections by title). Regenerate the index afterwards
+with `bash skills/spike-wrap/assets/gen-design-index.sh`.
 
 ## Notes
 

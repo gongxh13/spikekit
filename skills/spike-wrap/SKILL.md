@@ -1,285 +1,155 @@
 ---
 name: spike-wrap
 description: >-
-  Consolidate a completed spike (a `.spike/<topic>/` scratch directory) into durable
-  design docs, then clean up. Produces TWO documents: a detailed Markdown design doc for
-  agents at `docs/designs/agents/<topic>/design.md` (the source of truth — alignment
-  conclusions, the decision log, the validated approach, implementation plan) and a
-  rich, interactive HTML page for humans at `docs/designs/humans/<topic>/index.html`
-  (sidebar-navigated, with terminal walkthroughs, evidence cards, before/after toggles,
-  timeline, and an experiments appendix — designed to be skimmable yet trustworthy).
-  Also updates the index at `docs/designs/README.md` and a browsable
-  `docs/designs/humans/index.html`, then deletes the scratch directory (asking the user
-  first).
-  Use this when a spike or exploration session has converged and the user wants it
-  written up — "wrap up this spike", "the approach is confirmed, write it up",
-  "consolidate the `.spike/` stuff into a design doc", "ok this works, document it", or
-  "/spike-wrap". Pairs with `/spike`.
+  Consolidate a completed spike (a `.spike/<topic>/` scratch directory) into a durable,
+  current-state design doc at `docs/designs/agents/<topic>/design.md` — the source of
+  truth an implementer builds from — then regenerate the design index from frontmatter and
+  clean up. The doc records what is true now (the approach, constraints, upstream facts,
+  what's not done), not the story of the spike: no decision log, no experiment appendix,
+  no dated changelog. Use this when a spike or exploration session has converged and the
+  user wants it written up — "wrap up this spike", "the approach is confirmed, write it
+  up", "consolidate the `.spike/` stuff into a design doc", "ok this works, document it",
+  or "/spike-wrap". Pairs with `/spike`.
 ---
 
-# Spike-wrap: consolidate a spike into design docs
+# Spike-wrap: consolidate a spike into a design doc
 
 ## Why this exists
 
 A spike (see the `/spike` skill) leaves a `.spike/<topic>/` scratch directory full of
-experiments and a `NOTES.md` log. This skill turns that into the durable artifact: the
-design doc that someone — likely a fresh agent — uses to actually build the thing. Two
-docs, because LLMs now produce content faster than humans can read it:
+experiments and a `NOTES.md` log. This skill turns that into the one durable artifact: the
+design doc that someone — likely a fresh agent — uses to build and later maintain the thing.
 
-- **For agents** — `docs/designs/agents/<topic>/design.md`. Full detail, Markdown. The
-  source of truth.
-- **For humans** — `docs/designs/humans/<topic>/index.html`. A **rich, interactive
-  page** that tells the story of the spike: how it works, what's in flight in the
-  ecosystem, what was validated, decisions and why, the timeline of how thinking
-  evolved, and an appendix of every experiment actually run. Sidebar navigation lets
-  the reader jump around. The goal is not a passive summary but a confident,
-  skimmable-yet-trustworthy artifact.
-
-Keep these distinct: the HTML is **distilled from** the Markdown — same facts,
-different shape and depth. The HTML earns its keep through structure, interactivity,
-and the experiments appendix; the Markdown is for implementers reading top-to-bottom.
+**The doc describes the present, not the past.** Design docs that read like a lab notebook
+("tried X on Tuesday, switched to Y, then on Thursday…") rot in two ways: readers have to
+read everything to learn which conclusion still holds, and every later change gets
+*appended* to the end of the file — so parallel branches collide on the same lines and
+superseded decisions sit next to their replacements. The spike's history already lives in
+the scratch dir and in git; the doc keeps only what is true now, plus the hard-won facts
+that stop someone from re-walking a dead end.
 
 **Language:** these instructions are in English for convenience — not a cue to write in
-English. Produce everything that's prose in the user's working language: the design doc's
-body, the HTML, the index entries. Frontmatter field names and the `status` value
-(`validated` / `implemented` / `abandoned`, which doubles as a CSS class and an index
-key) stay as-is.
+English. Write the doc's prose in the user's working language. Frontmatter field names and
+the `status` values stay as-is.
 
 ## 1. Find the spike
 
 Locate `.spike/<topic>/`. If the user named a topic, use it. If there's exactly one, use
-it. If there are several, list them and ask which. Read `NOTES.md` and skim the
-artifacts so you actually know what happened — don't write the doc from memory alone.
-Especially: identify every concrete **experiment** that was run (commands, results) —
-those become the appendix in step 4.
+it. If there are several, list them and ask which. Read `NOTES.md` and skim the artifacts
+so you actually know what happened — don't write the doc from memory alone. Pull out:
+
+- the approach that was proven (or the reason it can't work),
+- every **external fact** the conclusion rests on (how an upstream API actually behaves,
+  a limit that was measured, a version that's required),
+- every **dead end** worth a one-line warning.
+
+Also check `docs/designs/` for an existing doc on the same subject. If one exists, you are
+**revising it in place** (step 3 applies to the whole file), not adding a second doc.
 
 ## 2. Confirm title & status
 
-Briefly confirm with the user (state your assumption and move on if it's obvious from the
-spike):
+Briefly confirm with the user (state your assumption and move on if it's obvious):
 
 - the topic slug and a human-readable title
-- the **status**: `validated` (works, ready to implement) / `implemented` (already
-  built) / `abandoned` (doesn't work — still worth a doc so nobody re-walks the maze)
+- the **status**:
+  - `planned` — proven, not built yet
+  - `implemented` — already built
+  - `partial` — some of it is built
+  - `paused` — research stopped without reaching the product
+  - `abandoned` — doesn't work; worth a short doc only so nobody re-walks the maze
 
-## 3. Write the agent doc — `docs/designs/agents/<topic>/design.md`
-
-This is the source of truth; include everything an implementer needs. Use this structure
-(adapt the section *contents* to the spike; keep the headings):
+## 3. Write the doc — `docs/designs/agents/<topic>/design.md`
 
 ```markdown
 ---
-topic: <slug>
-title: <title>
-status: validated | implemented | abandoned
-created: <YYYY-MM-DD>
-spike_dir: .spike/<topic>/        # deleted after this doc unless you keep it; recorded for provenance
-related_code: []                   # fill in with paths once implemented
-human_summary: ../../humans/<topic>/index.html
+title: <one-line title>
+status: planned | implemented | partial | paused | abandoned
+summary: <one line, ≤ 80 chars: what it is and where it stands — no dates, no deploy state>
+related_code:
+  - <paths, once they exist; omit or leave empty before implementation>
 ---
 
 # <Title>
 
-## What this is
-One paragraph: what we set out to validate, and the outcome.
+One paragraph: what this is and the conclusion.
 
-## Goal & context
-The broader goal this feeds. Why it matters. Scope — what's in, what's out.
-
-## Alignment conclusions
-Bulleted. The things the human and the agent agreed on during the spike —
-requirements, constraints, decisions, clarifications that aren't obvious from the
-code. Each bullet stands on its own.
-
-## What we tried — decision log
-The path, dead ends included: "tried X → didn't work because Y → switched to Z."
-This is what saves the next person from re-walking the maze.
-
-## The approach
-The validated design, in enough detail to implement:
-- interaction / control flow
+## <descriptive section per part of the design>
+How it works, in enough detail to build and to change safely:
+- control / data flow, components and their boundaries
 - data shapes, key APIs, example payloads
-- components and files to touch
-- error handling and edge cases discovered during validation
-- anything fiddly that was learned the hard way
+- invariants, and the reason behind each non-obvious choice (one or two sentences:
+  "do X, not Y, because Z")
 
-## Open questions & risks
-What's still uncertain; what to watch out for during implementation.
+## 约束与坑 / Constraints and pitfalls
+Upstream behaviour facts, measured limits, required versions, and dead ends compressed
+into one-line rules ("Approach X doesn't work: <why>"). When a fact is load-bearing and
+cheap to re-check, include the exact command that verifies it.
 
-## Implementation plan
-Concrete, ordered steps to build this — the checklist a fresh agent picks up and
-executes.
+## 未做 / 待定 / Not done
+One line each. Omit the section if empty.
+
+## 实施步骤 / Implementation steps
+Only while status is `planned`: the ordered checklist a fresh agent picks up.
+**Delete this section once it's built** — a finished plan is history.
 ```
 
-If the status is `abandoned`: replace "The approach" with "Why it doesn't work / what
-would have to change", and drop "Implementation plan".
+Rules that keep the doc maintainable:
 
-Before the cleanup step, move anything genuinely worth keeping — a reference payload, a
-diagram, a screenshot — from the scratch dir into `docs/designs/agents/<topic>/assets/`
-rather than letting it vanish. If a load-bearing figure is *missing* — there's no
-architecture diagram, or no picture of the validated result — generate one with the
-`spike-screenshot` skill rather than leaving the doc text-only: render a small HTML/CSS
-figure and screenshot it, or capture the actual page/output. In the agent doc these are
-referenced as ordinary relative paths (`![…](assets/foo.png)`); base64 embedding is only
-needed for the self-contained human HTML (see 4.2).
+- **Headings are descriptive, never numbered.** No `D1` / `§2.3` / `S5` / `### 1. …`.
+  Other docs and code comments refer to a section as `path#heading` or by its title, so
+  sections can be reordered without breaking references.
+- **No dates in headings, no changelog, no deploy/release state** ("not released yet",
+  "deployed as image X", "pending acceptance"). That belongs in git, PRs and issues.
+- **No process sections**: no "alignment conclusions", "what we tried", "timeline",
+  "experiments appendix". Turn whatever still matters into a statement about the current
+  design or a one-line pitfall.
+- **Superseded ideas are deleted**, not kept beside their replacement.
+- **Large topics split into sub-docs** in the same directory, named by subtopic
+  (`attachments.md`, `voice.md`): `design.md` stays the overview (frontmatter + one line
+  per sub-doc). Separate features touching separate files is what prevents merge conflicts.
+- **Assets** (`docs/designs/agents/<topic>/assets/`): only figures that depict the current
+  design (an architecture diagram, a reference payload). Probe scripts, raw logs and
+  experiment screenshots stay out — they're spike evidence, and the scratch dir or git
+  history is where evidence lives. If a load-bearing diagram is missing, render one with
+  the `spike-screenshot` skill and reference it with a relative path.
+- **Abandoned**: replace the design sections with "why it doesn't work / what would have
+  to change", keep the pitfalls, drop the implementation steps.
 
-## 4. Write the human HTML — `docs/designs/humans/<topic>/index.html`
+## 4. Regenerate the index — `docs/designs/README.md`
 
-This is the **main craft step** of spike-wrap. The HTML must work as a self-contained,
-single-file artifact (inline CSS + JS, no build step, no external dependencies, no
-network requests). Open it from disk and it renders.
+The index is **generated from each `design.md` frontmatter, never edited by hand** — a
+hand-maintained table is the first place parallel branches collide.
 
-### 4.1 Don't fill in a template — design the page
+- If the repo already has a generator (look for `gen-design-index.sh`, e.g. under
+  `deploy/` or `scripts/`), run it.
+- Otherwise copy `assets/gen-design-index.sh` from this skill into the repo (`scripts/`
+  unless the repo has a clear home for scripts), run it, and tell the user. If the repo has
+  CI, suggest adding `bash <path>/gen-design-index.sh --check` to it.
 
-There is no fixed "fill-in-the-blanks" template. Every spike has its own shape, and the
-HTML should reflect that shape. Start from `assets/starter.html` in this skill — it
-gives you the **layout scaffolding (sidebar nav + main column), styling primitives
-(typography, badges, code blocks, dark/light mode), and snippet examples of the common
-interactive patterns** — then design the actual content interactively per what this
-spike calls for.
+The script fails if any `design.md` lacks `title` / `status` / `summary` or uses a status
+outside the list above — fix the doc rather than the script.
 
-### 4.2 Required structural elements
+If the repo's `AGENTS.md` doesn't yet state how design docs are maintained, offer to add a
+short "design doc conventions" section summarising the rules in step 3 (current state only,
+rewrite in place instead of appending, descriptive headings, generated index).
 
-- **Sidebar nav, not top nav.** Put a sticky sidebar on the left (collapses to a top
-  bar on narrow screens via media query — the starter handles this). Each top-level
-  section gets one anchor link in the sidebar. Sidebar makes long pages navigable
-  without scroll-hunting and gives the reader a permanent table of contents.
-- **Hero at the top** stating the topic in plain language and the punchline (the
-  single most important takeaway). For `validated` spikes the punchline is usually
-  the design decision; for `abandoned` it's what doesn't work and why.
-- **Self-contained:** inline `<style>` + `<script>`, no external fonts or assets
-  (system font stack works fine). The reader may open this offline. This includes
-  **images**: any screenshot or figure you add must be embedded inline as a base64
-  data URI (`<img src="data:image/png;base64,…">`), not linked as an external file —
-  otherwise the page breaks when moved or opened offline. Generate the PNG with
-  `spike-screenshot`, then base64-encode it into the `src`.
-- **Dark/light mode** via `prefers-color-scheme` (the starter does this for you —
-  inherit it).
-- **`<html lang>`** matches the working language. Translate headings, labels, badges.
-- **Footer** linking back to the agent design doc.
-
-### 4.3 Section menu — pick what fits this spike
-
-Not every spike needs every section. Pick from this menu:
-
-| Section | When to include | Form |
-|---|---|---|
-| **How it works / user journey** | Almost always (validated/implemented). When there's a concrete user flow worth showing. | Interactive terminal walkthrough (numbered steps; step buttons or arrow keys advance; left-column terminal sim, right-column explanation) — or a numbered ordered list if the flow is shorter. |
-| **Ecosystem / evidence** | When the spike's outcome rests on external sources (PRs, libs, issues, papers). Especially when "we don't build, we adopt" is the conclusion. | Card grid: each card is one external artifact, with title, URL (whole card clickable), status badge (color-coded), brief description, and "解决什么问题" (what it solves). When a card points at something visual (a PR, a dashboard, a rendered page), capture a thumbnail of it with `spike-screenshot` (Workflow A) and embed it in the card (base64-inline, see 4.2) — evidence the reader can *see* beats a bare link. |
-| **Conceptual diagram** | When the architecture has layers / actors / data flow that benefits from a picture more than prose. | Inline SVG, or a labelled box-and-arrow built with HTML+CSS divs (the starter has `.layer` and `.layer-arrow` examples). For a polished figure that's fiddly to hand-build (a layered architecture, a directory tree, a comparison matrix), it's usually faster and cleaner to write a small standalone HTML/CSS figure and screenshot it with `spike-screenshot` (Workflow B), then embed the PNG base64-inline. |
-| **Key insight / before-after** | When there's a single sharp insight that flipped the design. | Tabbed before/after switch (the starter has `.switch`+`.panel`) showing the prior state vs the new state with concrete code/output samples. If the two states are visual (a UI, a rendered output, a diff), screenshot each with `spike-screenshot` and drop them into the two panels (base64-inline). |
-| **Decisions and why** | Always. | Bulleted list, each item stating the decision and the reason it was made. |
-| **What we validated** | Always (for `validated`/`implemented`). | Bulleted list of concrete facts proven during the spike (tied to the experiments in the appendix). |
-| **Risks & open questions** | Always. | Bulleted list. |
-| **Earlier thinking / superseded approaches** | When the design evolved significantly — show the history so the reader understands *why* the final answer is right. | Collapsed `<details>` block ("展开看…") containing the prior design, with a clear note "已演化"/"superseded". |
-| **Timeline** | When the exploration was non-linear or had clear turning points. | Vertical timeline (the starter has `.timeline` + `.timeline-item` with major-turning-point styling). |
-| **Experiments appendix** | **Always** — see 4.4. | Collapsed `<details>` per experiment. |
-
-Sequence: lead with the conclusion (hero), then the user-facing thing (how it works),
-then the evidence (ecosystem / decisions / validated), then any reflective sections
-(superseded thinking, timeline), then the appendix. The order matters — readers should
-land confident and only dig deeper if they want to.
-
-### 4.4 Experiments appendix — required
-
-The appendix records every concrete experiment actually run during the spike: the
-commands, the observed results, the conclusion drawn. This is what makes the doc
-*trustworthy* — a future reader (or you next month) can verify the claims weren't
-hallucinated. Format: a section near the end, with each experiment as a `<details>`
-block that expands to show:
-
-- **Setup** — what was prepared (mock files, fixtures, branches checked out)
-- **Commands run** — actual shell commands (in `<pre>` blocks, preserving the prompts)
-- **Observed result** — what came out, the key bits. If the result was visual (a
-  rendered page, a chart, a UI state), capture it with `spike-screenshot` and embed
-  the image base64-inline — a screenshot of the actual output is the most trustworthy
-  evidence there is, and it's what makes the appendix verifiable rather than asserted.
-- **Conclusion** — what the experiment proves (or disproves)
-
-If the spike ran a dozen tests, you don't need a `<details>` per test — group them
-into 3–5 coherent experiments. Aim for "if a reviewer wanted to redo this, could they
-follow these steps?"
-
-For `abandoned` spikes the appendix is even more important — it documents the
-maze you walked so nobody re-walks it.
-
-### 4.5 Interactive patterns — when they earn their place
-
-A heavyweight interactive device (a stepper, a before/after toggle, a tabbed view,
-collapsibles) earns its place when **a static form genuinely loses information**. Use
-them when:
-
-- **Stepper / terminal walkthrough**: a sequence playing out over time (commands +
-  effects). The reader benefits from seeing one step at a time, with focus.
-- **Before/after toggle**: comparing two states (current vs proposed) where being able
-  to flip back and forth highlights the delta. Side-by-side works too if both fit;
-  toggle wins when each side is dense.
-- **Collapsibles for history / experiments / appendices**: keep the main flow short
-  and skimmable, but don't lose detail.
-- **Card grid with hover lift + clickable whole card**: when you have a set of
-  semi-independent items (PRs, libraries, issues) and the reader wants to scan and
-  click into one.
-
-Avoid: gratuitous animations, JS-heavy widgets, interactive elements where a static
-list would land as fast. The starter ships the patterns above; use them when the spike
-calls for them, skip them when it doesn't.
-
-### 4.6 The starter
-
-`assets/starter.html` in this skill is the starting point. It gives you:
-
-- A sidebar nav scaffolding (sticky, mobile-responsive)
-- CSS custom properties for dark/light mode, typography, spacing
-- Pre-styled classes for the common patterns (badges, code blocks, terminal mock,
-  card grid, before/after switch, timeline, layer diagram)
-- HTML snippet examples of each interactive pattern as commented blocks, so you can
-  copy a pattern and adapt rather than re-deriving the markup
-
-Copy the starter, fill in the sidebar with your section anchors, and write each
-section's content from the spike's actual material. Add or modify CSS as the spike
-calls for — the starter is a primitives bag, not a layout you must conform to.
-
-## 5. Update the index — `docs/designs/README.md`
-
-Create it if it doesn't exist:
-
-```markdown
-# Design records
-
-Each entry came out of a spike (`/spike`) consolidated by `/spike-wrap`. The agent docs
-are the source of truth; the human summaries are the short version.
-
-| Topic | Title | Status | Date | Gist | Agent doc | Human doc |
-|-------|-------|--------|------|------|-----------|-----------|
-| stripe-payout-integration | Stripe payout integration | validated | 2026-05-12 | one-line gist | [design.md](agents/stripe-payout-integration/design.md) | [index.html](humans/stripe-payout-integration/index.html) |
-```
-
-Add or update this spike's row. Then refresh `docs/designs/humans/index.html` (start from
-`assets/index.html` in this skill if it doesn't exist yet) so there's a browsable human
-index linking to each summary page — localize its headings and labels and `<html lang>`
-the same way as the page itself.
-
-## 6. Clean up
+## 5. Clean up
 
 Show the user what's in `.spike/<topic>/`, and confirm the design doc captures what
-matters and that you've moved any keepers into `assets/`. Then **ask the user whether to
-delete `.spike/<topic>/`** — don't remove it on your own.
+matters. Then **ask the user whether to delete `.spike/<topic>/`** — don't remove it on
+your own.
 
 - If they agree: delete `.spike/<topic>/`. If `.spike/` is now empty, remove it too.
-- If they don't: leave it in place — it stays gitignored, so nothing gets committed
-  anyway.
+- If they don't: leave it in place — it stays gitignored, so nothing gets committed.
 
-The scratch dir was always meant to be disposable — its value is now in the doc — but
-it's the user's call when to let it go.
-
-## 7. Hand off
+## 6. Hand off
 
 Tell the user where things landed:
 
-> Done. Agent doc: `docs/designs/agents/<topic>/design.md` — the source of truth for
-> implementing this. Human page: `docs/designs/humans/<topic>/index.html` — sidebar
-> navigation, experiments appendix, all the spike's evidence. To build the feature,
-> start a fresh agent and point it at the agent doc.
+> Done. Design doc: `docs/designs/agents/<topic>/design.md` — the source of truth for
+> building this; index regenerated. To build the feature, start a fresh agent and point it
+> at the doc. When it's built, update the doc in place (status, related_code, delete the
+> implementation steps) rather than appending.
 
 Don't implement the feature here — that's a separate step, deliberately done by a fresh
 agent reading the doc (which also tests whether the doc is actually good enough).

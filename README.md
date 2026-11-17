@@ -8,7 +8,7 @@ the upfront speculative spec. You don't write down what you *think* will work an
 you go and *find out*, in dialogue, with throwaway code, and only then write the design
 down as a record of what you actually proved.
 
-![The spike lifecycle: a path is unclear → /spike runs throwaway experiments in a .spike/ scratch dir until proven → /spike-wrap consolidates the result into an agent-facing design.md (source of truth) and a human-facing one-pager → a fresh agent implements from design.md, which also tests whether the doc was good enough](./images/spike-lifecycle.png)
+![The spike lifecycle: a path is unclear → /spike runs throwaway experiments in a .spike/ scratch dir until proven → /spike-wrap consolidates the result into an agent-facing design.md (source of truth) and a regenerated index → a fresh agent implements from design.md, which also tests whether the doc was good enough](./images/spike-lifecycle.png)
 
 ## The skills
 
@@ -22,21 +22,21 @@ integrated), and run *real* throwaway experiments in a `.spike/<topic>/` scratch
 until the approach is proven — or proven not to work. Design done empirically and in
 dialogue, not on paper. Re-invoke `/spike` to resume one in progress.
 
-**`/spike-wrap`** — once it's confirmed, consolidate the spike into two durable docs, then
-delete the scratch dir:
+**`/spike-wrap`** — once it's confirmed, consolidate the spike into one durable doc,
+`docs/designs/agents/<topic>/design.md` — the source of truth an agent implements from —
+then regenerate the design index and offer to delete the scratch dir.
 
-- `docs/designs/agents/<topic>/design.md` — full detail; the source of truth an agent
-  implements from.
-- `docs/designs/humans/<topic>/index.html` — a skimmable HTML one-pager (status badge,
-  evidence and before/after cards, an experiments appendix), because LLMs now produce
-  content faster than people can read it.
+The doc records **what is true now**, not the story of the spike: the approach, the
+constraints and upstream facts it rests on, dead ends compressed into one-line warnings,
+and what's not done. No decision log, no experiment appendix, no dated changelog, no
+numbered sections. When the implementation later changes, the affected section is
+rewritten in place rather than appended to — so parallel branches don't collide at the end
+of the same file, and readers never have to work out which of two conflicting paragraphs
+still holds. The index (`docs/designs/README.md`) is generated from each doc's frontmatter
+by a bundled script, never hand-edited, for the same reason.
 
-Implementation is a separate step: a fresh agent reads the agent doc and builds it — which
-also tests whether the doc was good enough.
-
-![A real /spike-wrap human one-pager — the spike-runbook design summary: a validated status badge, a "what / how it works" walkthrough, and a before/after card contrasting commands a model merely infers (and gets wrong) against commands actually run and stamped ✅ verified](./images/human-doc-onepager.png)
-
-*A real `/spike-wrap` output — `docs/designs/humans/spike-runbook/index.html`, rendered.*
+Implementation is a separate step: a fresh agent reads the doc and builds it — which also
+tests whether the doc was good enough.
 
 ### Initialize a project, keep the portfolio honest — `/spike-init`
 
@@ -124,9 +124,8 @@ skills/
   spike-doc/         # /spike-doc — write docs rich with images & video
   spike-screenshot/  # /spike-screenshot — capture screenshots, figures, short videos
 docs/designs/        # consolidated design records (created by /spike-wrap)
-  README.md          # index
-  agents/<topic>/    # detailed, for agents (markdown) — source of truth
-  humans/<topic>/    # short, for humans (html) — distilled from the agent doc
+  README.md          # index — generated from each design.md's frontmatter
+  agents/<topic>/    # design.md (+ sub-docs) — current state, the source of truth
 docs/pending-decisions/  # parked human decisions from a /spike-goal run (index.html queue)
 .spike/<topic>/      # scratch for an in-progress spike (gitignored; deleted at wrap-up)
 ```
